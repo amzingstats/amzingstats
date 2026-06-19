@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMZing - Descubre cuánto gastas en Amazon</title>
+    <meta property="og:title" content="AMZing — ¿Cuánto has gastado en Amazon?">
+    <meta property="og:description" content="Descubre tus estadísticas históricas de compra. 100% local y privado — tu historial nunca sale de tu dispositivo.">
+    <meta property="og:image" content="https://amzingstats.netlify.app/og-image.png">
+    <meta property="og:url" content="https://amzingstats.netlify.app">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://amzingstats.netlify.app/og-image.png">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white border-b border-slate-200 py-3 px-4 shadow-sm">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+                <i data-lucide="zap" class="text-amber-500 w-5 h-5 fill-amber-100"></i>
+                <span class="text-xl font-black tracking-tight text-slate-900">AMZ<span class="text-amber-500 font-medium">ing</span></span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1.5 rounded-full font-medium border border-emerald-200">
+                <i data-lucide="lock" class="w-3 h-3 shrink-0"></i>
+                <span class="hidden sm:inline">Tu historial de compras nunca sale de tu dispositivo</span>
+                <span class="sm:hidden">100% local y privado</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 sm:py-12 flex-grow w-full">
+
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight mb-4" data-i18n="titulo_hero">
+                Descubre cuánto dinero te has gastado en Amazon
+            </h1>
+            <p class="text-lg text-slate-600 mb-4" data-i18n="subtitulo_hero">
+                Tu historial de compras nunca sale de tu dispositivo.
+            </p>
+        </div>
+
+        <!-- ZONA DE CARGA -->
+        <div id="upload-zone" class="mb-12">
+            <div class="text-center mb-6">
+                <div id="contador-participantes" style="display:inline-flex" class="items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-2 rounded-full">
+                    <i data-lucide="users" class="w-4 h-4 text-amber-500"></i>
+                    <span id="contador-texto">Cargando...</span>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8 items-stretch">
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="text-amber-500 w-5 h-5 shrink-0"></i>
+                    <span data-i18n="como_consigo">¿Cómo consigo el archivo?</span>
+                </h2>
+                <ol class="flex flex-col gap-4 text-sm text-slate-600">
+                    <li class="flex gap-3">
+                        <span class="bg-amber-100 text-amber-700 font-black text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">1</span>
+                        <span>Accede a tu cuenta de Amazon y solicita tus datos de pedidos siguiendo esta ruta:<br>
+                            <span class="inline-block mt-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-mono">Cuenta → Gestionar datos personales → Solicitar mis datos → Mis pedidos → Solicitar</span>
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-amber-100 text-amber-700 font-black text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <span>Sigue las instrucciones que recibirás en tu email para descargar tu historial. <strong>Puede tardar unos minutos.</strong></span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-amber-100 text-amber-700 font-black text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
+                        <span>Descarga el archivo <strong>Your Orders.zip</strong> y arrástralo o pégalo directamente en el cuadro de carga.</span>
+                    </li>
+                </ol>
+            </div>
+
+            <div id="drop-area" class="bg-white rounded-2xl shadow-xs flex flex-col items-center justify-center text-center select-none p-8 gap-4 border-2 border-dashed border-slate-300 hover:border-amber-400 transition-colors">
+                <input type="file" id="csv-file" class="sr-only" accept=".zip">
+
+                <!-- Logo AMZing -->
+                <div class="flex flex-col items-center gap-1 pointer-events-none">
+                    <div class="flex items-center gap-1.5">
+                        <i data-lucide="zap" class="text-amber-500 w-8 h-8 fill-amber-100"></i>
+                        <span class="text-3xl font-black tracking-tight text-slate-900">AMZ<span class="text-amber-500 font-medium">ing</span></span>
+                    </div>
+                    <p class="text-xs text-slate-400">Analiza tu historial de Amazon</p>
+                </div>
+
+                <!-- Icono subida -->
+                <div class="p-4 bg-amber-50 rounded-full text-amber-500 pointer-events-none">
+                    <i data-lucide="file-up" class="w-10 h-10"></i>
+                </div>
+
+                <!-- Botón principal grande -->
+                <button id="btn-seleccionar"
+                    class="w-full max-w-xs bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-black text-base px-6 py-4 rounded-2xl shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                    <i data-lucide="paperclip" class="w-5 h-5 shrink-0"></i>
+                    Seleccionar archivo ZIP
+                </button>
+
+                <!-- Arrastre — solo PC -->
+                <p class="hidden md:block text-xs text-slate-300 pointer-events-none">o arrastra el ZIP aquí</p>
+            </div>
+            </div><!-- end grid -->
+        </div><!-- end upload-zone -->
+
+        <!-- PANTALLA DE CARGA -->
+        <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-6 p-8">
+            <div class="text-6xl animate-bounce">⚡</div>
+            <div class="text-center">
+                <h2 class="text-2xl font-black text-slate-900 mb-1">Analizando tu historial</h2>
+                <p id="loading-msg" class="text-slate-500 text-sm">Procesando tus pedidos...</p>
+            </div>
+            <div class="w-full max-w-sm">
+                <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+                    <span id="loading-step">Leyendo archivo</span>
+                    <span id="loading-pct">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div id="loading-bar" class="h-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 transition-all duration-300" style="width:0%"></div>
+                </div>
+            </div>
+            <p id="loading-countdown" class="text-xs text-slate-400 h-4"></p>
+        </div>
+
+        <!-- ESTADO DE ERROR -->
+        <div id="error-banner" class="hidden mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-center gap-3">
+            <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+            <p id="error-mensaje" class="text-sm font-medium"></p>
+        </div>
+
+        <!-- DASHBOARD DE RESULTADOS -->
+        <div id="results-dashboard" class="hidden space-y-8">
+
+            <!-- 1. PERFIL DE USUARIO -->
+            <div id="perfil-usuario" class="hidden p-6 bg-white border-2 border-amber-400 rounded-2xl shadow-sm text-center">
+                <div id="perfil-icono" class="text-5xl mb-2"></div>
+                <p class="text-xs text-amber-600 font-bold uppercase tracking-widest">Tu perfil Amazon</p>
+                <h2 id="perfil-nombre" class="text-2xl font-black text-slate-900 mt-1"></h2>
+                <p id="perfil-estrellas" class="text-2xl mt-1 tracking-widest"></p>
+                <p id="perfil-frase" class="text-slate-600 italic mt-2"></p>
+
+                <!-- BOTÓN LEYENDA -->
+                <div class="mt-5 pt-4 border-t border-amber-200">
+                    <button onclick="toggleLeyenda()" id="btn-leyenda" class="flex items-center gap-2 mx-auto text-sm text-amber-700 font-semibold hover:text-amber-900 transition-colors">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                        <span id="btn-leyenda-texto">Ver leyenda de perfiles</span>
+                        <i data-lucide="chevron-down" id="leyenda-chevron" class="w-4 h-4 transition-transform"></i>
+                    </button>
+                    <div id="leyenda-perfiles" style="display:none" class="mt-4 text-left">
+                        <div class="overflow-x-auto rounded-xl border border-amber-100">
+                            <table class="w-full text-xs text-slate-600">
+                                <thead class="bg-amber-50 text-amber-800 font-bold uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-3 py-2">#</th>
+                                        <th class="px-3 py-2">Perfil</th>
+                                        <th class="px-3 py-2 text-right">Gasto total</th>
+                                        <th class="px-3 py-2 text-center">⭐</th>
+                                        <th class="px-3 py-2 text-center">⭐⭐</th>
+                                        <th class="px-3 py-2 text-center">⭐⭐⭐</th>
+                                        <th class="px-3 py-2 text-center">⭐⭐⭐⭐</th>
+                                        <th class="px-3 py-2 text-center">⭐⭐⭐⭐⭐</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">1</td><td class="px-3 py-2 font-medium">👻 Fantasma Digital</td><td class="px-3 py-2 text-right">&lt; 1.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">2</td><td class="px-3 py-2 font-medium">🧘 Monje Ascético</td><td class="px-3 py-2 text-right">1.000–2.500€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">3</td><td class="px-3 py-2 font-medium">⚖️ Usuario Pragmático</td><td class="px-3 py-2 text-right">2.500–5.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">4</td><td class="px-3 py-2 font-medium">🤔 Curioso Crónico</td><td class="px-3 py-2 text-right">5.000–10.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">5</td><td class="px-3 py-2 font-medium">🧭 Explorador de Ofertas</td><td class="px-3 py-2 text-right">10.000–18.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">6</td><td class="px-3 py-2 font-medium">🏹 Cazador de Novedades</td><td class="px-3 py-2 text-right">18.000–30.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">7</td><td class="px-3 py-2 font-medium">📦 Almacén Particular</td><td class="px-3 py-2 text-right">30.000–50.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">8</td><td class="px-3 py-2 font-medium">👑 Estilo de Vida Prime</td><td class="px-3 py-2 text-right">50.000–75.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">9</td><td class="px-3 py-2 font-medium">🚀 Patrocinador Oficial</td><td class="px-3 py-2 text-right">75.000–100.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                    <tr class="hover:bg-amber-50/50"><td class="px-3 py-2 text-slate-400 font-mono text-xs">10</td><td class="px-3 py-2 font-medium">💼 Accionista en la Sombra</td><td class="px-3 py-2 text-right">&gt; 100.000€</td><td class="px-3 py-2 text-center text-slate-400">&lt;2 años</td><td class="px-3 py-2 text-center text-slate-400">2–4 años</td><td class="px-3 py-2 text-center text-slate-400">4–7 años</td><td class="px-3 py-2 text-center text-slate-400">7–10 años</td><td class="px-3 py-2 text-center text-slate-400">&gt;10 años</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2 text-center">El perfil se determina por el gasto histórico total. Las estrellas por los años de antigüedad en Amazon.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. STATS -->
+            <div id="results-top" class="grid grid-cols-2 sm:grid-cols-6 gap-3 sm:gap-4">
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs text-center">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Antigüedad</p>
+                    <p class="text-xl sm:text-2xl font-black text-amber-600" id="stat-antiguedad">-</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs text-center">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Gasto Total</p>
+                    <p class="text-xl sm:text-2xl font-black text-slate-900 leading-tight" id="stat-total">0,00 €</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs text-center">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Media Mensual</p>
+                    <p class="text-xl sm:text-2xl font-black text-slate-900" id="stat-media">0,00 €</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs text-center">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Nº Pedidos</p>
+                    <p class="text-xl sm:text-2xl font-black text-slate-900" id="stat-pedidos">0</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs text-center">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Cuotas Prime</p>
+                    <p class="text-xl sm:text-2xl font-black text-[#00A8E1]" id="stat-prime">-</p>
+                    <p class="text-xs text-slate-400 mt-0.5" id="stat-prime-anios"></p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs text-center">
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Año más consumista</p>
+                    <p class="text-xl sm:text-2xl font-black text-amber-600" id="stat-anio">-</p>
+                </div>
+            </div>
+
+            <!-- EQUIVALENCIAS -->
+            <div class="bg-amber-500/10 border border-amber-200 rounded-xl p-6">
+                <h3 class="text-base font-bold text-amber-900 mb-4 flex items-center gap-2">
+                    <i data-lucide="scale" class="w-5 h-5 text-amber-600"></i>
+                    ¿A qué equivale ese dinero en la vida real?
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                    <div class="bg-white p-4 rounded-lg shadow-2xs border border-amber-100 flex flex-col items-center justify-center">
+                        <p class="text-2xl mb-1">🍺</p>
+                        <p class="text-xl font-bold text-slate-900" id="eq-canas">0 cañas</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5" id="eq-canas-sub"></p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-2xs border border-amber-100 flex flex-col items-center justify-center">
+                        <p class="text-2xl mb-1">⛽</p>
+                        <p class="text-xl font-bold text-slate-900" id="eq-gasolina">0 depósitos</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5" id="eq-gasolina-sub"></p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-2xs border border-amber-100 flex flex-col items-center justify-center">
+                        <span class="text-3xl font-black text-red-600 tracking-tighter select-none leading-none mb-1">N</span>
+                        <p class="text-xl font-bold text-slate-900" id="eq-netflix">0 meses</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5" id="eq-netflix-sub"></p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-2xs border border-amber-100 flex flex-col items-center justify-center">
+                        <div class="mb-1">
+                            <svg viewBox="0 0 24 24" class="w-8 h-8" fill="#f7931a" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.548v-.002zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.705-.167-1.064-.25l.526-2.127-1.32-.33-.54 2.165c-.285-.067-.565-.132-.84-.2l-1.815-.45-.35 1.407s.974.225.955.236c.535.136.63.486.615.766l-1.477 5.92c-.075.166-.24.406-.614.314.015.02-.96-.24-.96-.24l-.66 1.51 1.71.426.93.242-.54 2.19 1.32.327.54-2.165c.36.1.705.19 1.05.273l-.51 2.154 1.32.33.545-2.19c2.24.427 3.93.257 4.64-1.774.57-1.637-.03-2.58-1.217-3.196.854-.193 1.5-.76 1.68-1.93h.01zm-3.01 4.22c-.404 1.64-3.157.75-4.05.53l.72-2.9c.896.23 3.757.67 3.33 2.37zm.41-4.24c-.37 1.49-2.662.735-3.405.55l.654-2.64c.744.18 3.137.524 2.75 2.084v.006z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xl font-bold text-slate-900" id="eq-btc">Cargando...</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5" id="eq-btc-sub"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. RANKING -->
+            <div id="ranking-container" class="bg-white border-2 border-amber-400 rounded-2xl text-center shadow-sm">
+                <div class="p-8">
+                    <!-- Trofeo y título -->
+                    <div class="flex flex-col items-center gap-3 mb-6">
+                        <span class="text-5xl">🏆</span>
+                        <h3 class="text-2xl font-black text-slate-900">Ranking Global AMZing</h3>
+                        <p class="text-slate-500 text-sm max-w-xs">¿Cuánto has gastado comparado con el resto? Descúbrelo.</p>
+                    </div>
+
+                    <!-- Formulario -->
+                    <div id="ranking-email-form" class="flex flex-col items-center gap-3 mb-2">
+                        <input type="email" id="ranking-email" placeholder="Introduce tu email de Amazon"
+                            class="w-full max-w-sm text-sm px-5 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:bg-white transition-all text-center">
+                        <button onclick="participarEnRanking()" id="btn-ranking"
+                            class="w-full max-w-sm bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-white font-black text-base px-6 py-3.5 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="trophy" class="w-5 h-5 shrink-0"></i>
+                            Ver mi posición en el Ranking
+                        </button>
+                        <p class="text-xs text-slate-400">Recibirás por mail tu posición en el ranking cada mes.</p>
+                    </div>
+
+                    <p id="ranking-resultado" class="mt-2 text-sm font-bold text-amber-600 hidden"></p>
+
+                    <p class="text-xs text-slate-300 mt-4 flex items-center justify-center gap-1">
+                        <i data-lucide="alert-triangle" class="w-3 h-3 shrink-0"></i>
+                        El ranking se basa en datos autodeclarados. AMZing no verifica los importes.
+                    </p>
+                    <p class="text-xs text-slate-300 mt-2">
+                        Guardamos tu email y estadísticas derivadas (perfil, gasto, categoría) para enviarte el ranking mensual. Sin historial de compras. Baja cuando quieras escribiendo a <a href="mailto:amzingstats@gmail.com" class="underline hover:text-slate-400">amzingstats@gmail.com</a>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 5. BOTONES COMPARTIR -->
+            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs text-center">
+                <p class="text-sm text-slate-600 font-medium mb-4">Comparte tus resultados</p>
+                <div class="flex items-center justify-center gap-3">
+                    <button onclick="compartirWhatsApp()" title="Compartir en WhatsApp" class="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-sm transition-colors">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    </button>
+                    <button onclick="compartirX()" title="Publicar en X" class="flex items-center justify-center w-12 h-12 bg-slate-900 hover:bg-black text-white rounded-xl shadow-sm transition-colors">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </button>
+                    <button onclick="copiarEnlace()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 h-12 rounded-xl transition-colors text-sm">
+                        <i data-lucide="link" class="w-4 h-4"></i>
+                        <span id="btn-copiar-texto">Copiar enlace</span>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-400 mt-3 flex items-center justify-center gap-1">
+                    <i data-lucide="alert-triangle" class="w-3 h-3 shrink-0"></i>
+                    Los datos compartidos provienen de tu historial de Amazon y son de tu responsabilidad.
+                </p>
+            </div>
+
+            <!-- MI WRAPPED -->
+            <div class="flex items-center gap-3 pt-2">
+                <div class="flex-1 h-px bg-slate-200"></div>
+                <h2 class="text-base font-black text-slate-500 uppercase tracking-widest">Mi Wrapped</h2>
+                <div class="flex-1 h-px bg-slate-200"></div>
+            </div>
+
+            <!-- PATRÓN DE CONSUMO -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                <h3 class="text-base font-bold text-amber-900 mb-4 flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-amber-600"></i>
+                    Tu patrón de consumo
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="tendencias-grid"></div>
+            </div>
+
+            <!-- TOP 3 CATEGORÍAS -->
+            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
+                <h3 class="text-lg font-bold text-slate-900 mb-5">🏆 Top categorías</h3>
+                <div id="top-categorias-loading" class="flex items-center gap-3 py-4 text-slate-400 text-sm">
+                    <svg class="animate-spin w-4 h-4 shrink-0 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Clasificando productos...
+                </div>
+                <div id="top-categorias-grid" class="flex flex-col gap-3 hidden"></div>
+            </div>
+
+            <!-- PRODUCTO RECURRENTE Y MÁS CARO -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <i data-lucide="repeat" class="w-4 h-4"></i> Producto más recurrente
+                    </h3>
+                    <p id="metrica-contexto-rec" class="text-xs text-amber-600 font-semibold mb-3">Histórico</p>
+                    <div class="flex gap-3 items-start">
+                        <img id="img-recurrente" src="" alt="" class="w-16 h-16 object-contain rounded-lg border border-slate-100 bg-slate-50 shrink-0 hidden">
+                        <div class="min-w-0">
+                            <p id="top-recurrente" class="text-base font-bold text-slate-900 leading-snug">-</p>
+                            <p id="top-recurrente-veces" class="text-sm text-slate-500 mt-0.5"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <i data-lucide="trending-up" class="w-4 h-4"></i> Compra más cara
+                    </h3>
+                    <p id="metrica-contexto-caro" class="text-xs text-amber-600 font-semibold mb-3">Histórico</p>
+                    <div class="flex gap-3 items-start">
+                        <img id="img-caro" src="" alt="" class="w-16 h-16 object-contain rounded-lg border border-slate-100 bg-slate-50 shrink-0 hidden">
+                        <div class="min-w-0">
+                            <p id="top-caro" class="text-base font-bold text-slate-900 leading-snug">-</p>
+                            <p id="top-caro-precio" class="text-sm text-slate-500 mt-0.5"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICOS -->
+            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-6">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-slate-900">Gasto por año</h3>
+                        <button id="btn-reset-anio" onclick="resetFiltroAnio()" style="display:none" class="text-xs text-amber-600 font-semibold hover:text-amber-800 flex items-center gap-1">
+                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Quitar filtro
+                        </button>
+                    </div>
+                    <div class="relative w-full h-48">
+                        <canvas id="chart-anios"></canvas>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 h-px bg-slate-100"></div>
+                    <span id="contexto-label" class="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">Histórico completo</span>
+                    <div class="flex-1 h-px bg-slate-100"></div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-slate-700">Detalle mensual</h3>
+                        <button id="btn-reset-mes" onclick="resetFiltroMes()" style="display:none" class="text-xs text-amber-600 font-semibold hover:text-amber-800 flex items-center gap-1">
+                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Quitar filtro
+                        </button>
+                    </div>
+                    <div class="relative w-full h-64">
+                        <canvas id="chart-meses"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA HISTORIAL (DESPLEGABLE) -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                <button onclick="toggleTabla()" class="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-slate-50 transition-colors">
+                    <div class="text-left">
+                        <h3 class="text-lg font-bold text-slate-900">Detalle historial pedidos</h3>
+                        <p id="tabla-contexto" class="text-xs text-amber-600 font-semibold mt-0.5">Histórico completo</p>
+                    </div>
+                    <i data-lucide="chevron-down" id="tabla-chevron" class="w-5 h-5 text-slate-400 transition-transform shrink-0"></i>
+                </button>
+                <div id="tabla-contenido" style="display:none" class="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div class="relative w-full sm:w-80 mb-4">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3.5"></i>
+                        <input type="text" id="tabla-search" placeholder="Filtrar por artículo..." class="w-full text-sm pl-9 pr-4 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-hidden focus:border-amber-500 transition-colors">
+                    </div>
+                    <!-- TABLA DESKTOP -->
+                    <div class="hidden sm:block overflow-x-auto max-h-96 border border-slate-100 rounded-lg">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-xs uppercase bg-slate-100 text-slate-700 sticky top-0">
+                                <tr>
+                                    <th onclick="ordenarTabla('fecha')" class="px-4 py-3 w-28 cursor-pointer hover:bg-slate-200 transition-colors select-none">
+                                        <span class="flex items-center gap-1">Fecha <span id="sort-icon-fecha" class="text-slate-400">↕</span></span>
+                                    </th>
+                                    <th class="px-4 py-3">Descripción del Artículo</th>
+                                    <th onclick="ordenarTabla('precio')" class="px-4 py-3 text-right w-24 cursor-pointer hover:bg-slate-200 transition-colors select-none">
+                                        <span class="flex items-center justify-end gap-1">Importe <span id="sort-icon-precio" class="text-slate-400">↕</span></span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-productos-body-desktop"></tbody>
+                        </table>
+                    </div>
+                    <!-- LISTA MÓVIL -->
+                    <div id="tabla-productos-body-mobile" class="sm:hidden flex flex-col gap-2 max-h-96 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <!-- FEEDBACK -->
+            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
+                <h3 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <i data-lucide="message-square" class="w-5 h-5 text-amber-500"></i>
+                    ¿Tienes alguna sugerencia?
+                </h3>
+                <p class="text-sm text-slate-500 mb-4">Tu feedback nos ayuda a mejorar AMZing. Cuéntanos qué echas en falta, qué mejorarías o simplemente qué te ha parecido.</p>
+                <textarea id="feedback-texto" rows="4" placeholder="Escribe aquí tu comentario, sugerencia o idea..."
+                    class="w-full text-sm px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-400 transition-colors resize-none mb-3"></textarea>
+                <div class="flex items-center justify-between gap-3">
+                    <p id="feedback-estado" class="text-xs text-slate-400"></p>
+                    <button onclick="enviarFeedback()" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors shrink-0">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Enviar
+                    </button>
+                </div>
+            </div>
+
+            <!-- APÓYAME -->
+            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs text-center">
+                <p class="text-slate-600 text-sm mb-4">Hecho con cariño y sin publicidad. Si te ha gustado, apóyame con un café ⚡</p>
+                <a href="https://ko-fi.com/amzingstats" target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-sm transition-colors">
+                    <i data-lucide="heart" class="w-4 h-4"></i>
+                    Apóyame
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-slate-100 border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <p>© 2026 AMZing. Análisis local en entorno seguro.</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwTUZsOhASyxfY5qkXRkzcKAEbSZ9AZpb_omwY8bR9cNZfjohZLuAX7D2RjHsQCjWk/exec';
+        const URL_APP = 'https://amzingstats.netlify.app';
+
+        function actualizarEnlaceAmazon() {
+            const pais = document.getElementById('amazon-pais').value;
+            const btn  = document.getElementById('btn-amazon-link');
+            if (!pais) return;
+            btn.href = `https://www.amazon.${pais}/hz/privacy-central/data-requests/preview.html`;
+            btn.classList.remove('bg-slate-300','text-slate-500','cursor-not-allowed','pointer-events-none');
+            btn.classList.add('bg-amber-500','hover:bg-amber-600','text-white','cursor-pointer');
+        }
+
+        // ── ESTADO GLOBAL ─────────────────────────────────────────────────────────
+        let todosLosProductos = [];
+        let totalHistorico    = 0;
+        let mediaMensual      = 0;
+        let perfilActual      = { icono: '', nombre: '' };
+        const nombresMeses    = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+        // ── CONTADOR ─────────────────────────────────────────────────────────────
+        async function cargarContador() {
+            if (API_URL.includes('PEGA_AQUI')) {
+                document.getElementById('contador-participantes').style.display = 'none';
+                return;
+            }
+            try {
+                const res  = await fetch(`${API_URL}?action=count`);
+                const data = await res.json();
+                const n    = data.count || 0;
+                document.getElementById('contador-texto').textContent = n === 0
+                    ? 'Sé el primero en analizar tu historial'
+                    : `${n.toLocaleString('es-ES')} análisis realizados`;
+            } catch {
+                document.getElementById('contador-participantes').style.display = 'none';
+            }
+        }
+        cargarContador();
+
+        // ── PERFIL ────────────────────────────────────────────────────────────────
+        function determinarNivel(anios) {
+            if (anios < 2)  return { estrellas: "⭐",           nivel: 1 };
+            if (anios < 4)  return { estrellas: "⭐⭐",         nivel: 2 };
+            if (anios < 7)  return { estrellas: "⭐⭐⭐",       nivel: 3 };
+            if (anios < 10) return { estrellas: "⭐⭐⭐⭐",     nivel: 4 };
+            return                  { estrellas: "⭐⭐⭐⭐⭐",   nivel: 5 };
+        }
+
+        function determinarPerfil(total, nivel) {
+            const perfiles = [
+                { max: 1000,     nombre: "Fantasma Digital",        icono: "👻", frases: ["Llevas menos de 2 años y ya apenas dejas huella. El algoritmo sospecha que eres un bot.", "Entre 2 y 4 años comprando lo justo. Tu tarjeta te lo agradece cada noche.", "Más de 4 años en Amazon y menos de 1.000€. Eres un caso de estudio en austeridad.", "Más de 7 años resistiendo el algoritmo. Una leyenda del autocontrol digital.", "Más de 10 años en Amazon y menos de 1.000€. Deberían escribir libros sobre ti."] },
+                { max: 2500,     nombre: "Monje Ascético",          icono: "🧘", frases: ["Recién llegado y ya con filosofía zen. Compras solo lo esencial.", "Entre 2 y 4 años practicando el desapego material. Tu banco te quiere pero no te entiende.", "Más de 4 años comprando con templanza. El equilibrio es tu superpoder.", "Más de 7 años de austeridad consciente. Buda estaría orgulloso.", "Una década larga de monje digital. Eres un mito del consumo responsable."] },
+                { max: 5000,     nombre: "Usuario Pragmático",      icono: "⚖️", frases: ["Nuevo en esto pero ya con las ideas claras. Compras con propósito.", "Entre 2 y 4 años comprando solo lo necesario. Ni derrochador ni austero.", "Más de 4 años siendo el término medio. Amazon te respeta.", "Más de 7 años de compras sensatas. Eso es disciplina de verdad.", "Una década larga comprando con cabeza. Eres un referente del consumo inteligente."] },
+                { max: 10000,    nombre: "Curioso Crónico",         icono: "🤔", frases: ["Recién llegado y ya picando en todo. Ese botón de compra es tu meditación.", "Entre 2 y 4 años explorando el catálogo. La curiosidad no tiene cura.", "Más de 4 años y más de 5.000€ de curiosidad acumulada. Caso clínico.", "Más de 7 años husmeando el catálogo. Amazon te conoce mejor que tu familia.", "Una década larga y más de 5.000€ invertidos en curiosidad. Leyenda del carrito abandonado."] },
+                { max: 18000,    nombre: "Explorador de Ofertas",   icono: "🧭", frases: ["Nuevo pero ya sabes dónde están las mejores ofertas. Amazon es tu despensa.", "Entre 2 y 4 años surtiendo la casa desde el sofá. El repartidor empieza a conocerte.", "Más de 4 años y más de 10.000€ explorando el catálogo. Conoces cada rincón.", "Más de 7 años abasteciendo el hogar. Deberías cobrar por asesoría de compras.", "Una década larga de exploración. Amazon te debería dar una placa en la puerta."] },
+                { max: 30000,    nombre: "Cazador de Novedades",    icono: "🏹", frases: ["Recién llegado pero ya cazando lo último. El repartidor empieza a reconocerte.", "Entre 2 y 4 años siendo el primero en tener lo último. Early adopter confirmado.", "Más de 4 años y más de 18.000€ cazando novedades. Esto ya no es una afición, es una vocación.", "Más de 7 años a la vanguardia del catálogo. Deberías cobrar por ser tendencia.", "Una década larga y más de 18.000€ invertidos en ser el primero. Respeto absoluto."] },
+                { max: 50000,    nombre: "Almacén Particular",      icono: "📦", frases: ["Nuevo y ya acumulando. Tu salón tiene más stock que muchas tiendas del barrio.", "Entre 2 y 4 años llenando el almacén. El pasillo ya tiene nombre propio.", "Más de 4 años y más de 30.000€ en stock. Tu casa es oficialmente un centro de distribución.", "Más de 7 años surtiendo. Amazon debería pagarte alquiler por el espacio que ocupas.", "Una década larga y más de 30.000€ en compras. Eres el almacén particular definitivo."] },
+                { max: 75000,    nombre: "Estilo de Vida Prime",    icono: "👑", frases: ["Recién llegado pero ya viviendo en modo Prime. No hay marcha atrás.", "Entre 2 y 4 años con Prime como estilo de vida. ¿Bezos te llama por tu nombre?", "Más de 4 años y más de 50.000€. Prime no es un servicio para ti, es tu identidad.", "Más de 7 años en modo Prime. Eres la razón por la que existe el programa.", "Una década larga y más de 50.000€. Deberían ponerte en el catálogo como producto destacado."] },
+                { max: 100000,   nombre: "Patrocinador Oficial",    icono: "🚀", frases: ["Recién llegado y ya financiando cohetes. A este ritmo deberían darte acciones.", "Entre 2 y 4 años sufragando el imperio. Deberían ponerte una placa en el cuartel general.", "Más de 4 años y más de 75.000€. Ya tienes nombre en algún hangar de Amazon.", "Más de 7 años financiando el espacio. Exige tu asiento en el próximo lanzamiento.", "Una década larga y más de 75.000€. Bezos te debe una llamada personal."] },
+                { max: Infinity, nombre: "Accionista en la Sombra", icono: "💼", frases: ["Recién llegado y ya por encima de los 100.000€. El logo debería ser tu cara.", "Entre 2 y 4 años moviendo la aguja. Bezos lo sabe aunque no lo diga.", "Más de 4 años y más de 100.000€. Eres accionista sin saberlo.", "Más de 7 años sosteniendo el imperio. Ya puedes exigir dividendos.", "Una década larga y más de 100.000€. Leyenda absoluta del consumo digital. Sin discusión."] }
+            ];
+            const p = perfiles.find(p => total <= p.max);
+            return { ...p, frase: p.frases[nivel - 1] };
+        }
+
+        // ── COMPARTIR ─────────────────────────────────────────────────────────────
+        function actualizarEnlaceAmazon() {
+            const pais = document.getElementById('amazon-pais').value;
+            const btn  = document.getElementById('btn-amazon-link');
+            if (!pais) return;
+            btn.href = `https://www.amazon.${pais}/hz/privacy-central/data-requests/preview.html`;
+            btn.classList.remove('bg-slate-300','text-slate-500','cursor-not-allowed','pointer-events-none');
+            btn.classList.add('bg-amber-500','hover:bg-amber-600','text-white','cursor-pointer');
+        }
+
+        function enviarFeedback() {
+            const texto = document.getElementById('feedback-texto').value.trim();
+            const estado = document.getElementById('feedback-estado');
+            if (!texto) {
+                estado.textContent = 'Por favor escribe algo antes de enviar.';
+                estado.className = 'text-xs text-red-400';
+                return;
+            }
+            const asunto = encodeURIComponent('Feedback AMZing');
+            const cuerpo = encodeURIComponent(texto);
+            window.open(`mailto:amzingstats@gmail.com?subject=${asunto}&body=${cuerpo}`, '_blank');
+            estado.textContent = '¡Gracias! Se abrirá tu cliente de correo para enviar el mensaje.';
+            estado.className = 'text-xs text-emerald-500';
+            document.getElementById('feedback-texto').value = '';
+        }
+
+        function toggleTabla() {
+            const contenido = document.getElementById('tabla-contenido');
+            const chevron   = document.getElementById('tabla-chevron');
+            const visible   = contenido.style.display !== 'none';
+            contenido.style.display = visible ? 'none' : 'block';
+            chevron.style.transform = visible ? '' : 'rotate(180deg)';
+            lucide.createIcons();
+        }
+
+        function toggleLeyenda() {
+            const panel   = document.getElementById('leyenda-perfiles');
+            const chevron = document.getElementById('leyenda-chevron');
+            const texto   = document.getElementById('btn-leyenda-texto');
+            const visible = panel.style.display !== 'none';
+            panel.style.display  = visible ? 'none' : 'block';
+            chevron.style.transform = visible ? '' : 'rotate(180deg)';
+            texto.textContent = visible ? 'Ver leyenda de perfiles' : 'Ocultar leyenda de perfiles';
+            lucide.createIcons();
+        }
+
+        function getTop1Categoria() {
+            const totales = {};
+            CATEGORIAS_META.forEach(c => { totales[c.id] = 0; });
+            todosLosProductos.forEach(p => {
+                const cat = p.categoria || 'Otros';
+                totales[cat] = (totales[cat] || 0) + p.precio;
+            });
+            return CATEGORIAS_META.filter(c => totales[c.id] > 0).sort((a,b) => totales[b.id]-totales[a.id])[0] || null;
+        }
+
+        function compartirWhatsApp() {
+            const estrellas = document.getElementById('perfil-estrellas').textContent;
+            const texto = `Yo soy ${perfilActual.icono} ${perfilActual.nombre} ${estrellas} Conoce tu perfil de gasto en Amazon con AMZing. ${URL_APP}`;
+            window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(texto), '_blank');
+        }
+
+        function compartirX() {
+            const estrellas = document.getElementById('perfil-estrellas').textContent;
+            const aniosHist = new Date().getFullYear() - Math.min(...todosLosProductos.map(p => parseInt(p.anio)));
+            const total     = document.getElementById('stat-total').textContent;
+            const pedidos   = document.getElementById('stat-pedidos').textContent;
+            const top1      = getTop1Categoria();
+            const lineas = [
+                'Estos son mis números en Amazon:',
+                '',
+                `${perfilActual.icono} ${perfilActual.nombre} ${estrellas}`,
+                `📅 ${aniosHist} año${aniosHist === 1 ? '' : 's'} comprando`,
+                `💸 ${total} gastados en total`,
+                `📦 ${pedidos} pedidos`,
+                top1 ? `${top1.icono} Categoría top: ${top1.id}` : '',
+                '',
+                `Conoce el tuyo en ${URL_APP}`,
+            ].filter(l => l !== null);
+            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(lineas.join('\n')), '_blank');
+        }
+
+        function copiarEnlace() {
+            const estrellas = document.getElementById('perfil-estrellas').textContent;
+            const texto = `Yo soy ${perfilActual.icono} ${perfilActual.nombre} ${estrellas} Conoce tu perfil de gasto en Amazon con AMZing. ${URL_APP}`;
+            navigator.clipboard.writeText(texto).then(() => {
+                const btn = document.getElementById('btn-copiar-texto');
+                btn.textContent = '¡Copiado!';
+                setTimeout(() => { btn.textContent = 'Copiar enlace'; }, 2000);
+            });
+        }
+
+        // ── ERRORES ───────────────────────────────────────────────────────────────
+        // ── CLASIFICACIÓN ─────────────────────────────────────────────────────────
+
+        // PASO 1: Diccionario ampliado de palabras clave
+        const DICT = {
+            'Tecnología': [
+                'usb','hdmi','cable','cargador','adaptador','hub','puerto','conector','bluetooth',
+                'wifi','router','antena','ethernet','rj45','fibra',
+                'auricular','cascos','headphone','earphone','earbud','altavoz','speaker','microfono','micrófono',
+                'teclado','raton','ratón','mouse','mousepad','alfombrilla gaming',
+                'monitor','pantalla','webcam','camara web','cámara web',
+                'ssd','hdd','disco duro','pendrive','memoria ram','tarjeta sd','nvme',
+                'ordenador','portátil','laptop','macbook','tablet','ipad','smartphone','movil','móvil','iphone','android','samsung galaxy','huawei','xiaomi',
+                'funda movil','funda iphone','funda samsung','funda huawei','protector pantalla','cristal templado','vidrio templado',
+                'cargador inalambrico','bateria externa','powerbank',
+                'raspberry','arduino','sensor','led strip','tira led',
+                'impresora','escaner','escáner','cartucho tinta',
+                'smart home','alexa','echo dot','chromecast','fire tv',
+                'gopro','drone','tripode','trípode',
+                'bitcoin','trezor','ledger','crypto','hardware wallet',
+                'consola','playstation','xbox','nintendo switch','mando consola','joy-con',
+                'smartwatch','reloj inteligente','amazfit','garmin','fitbit','apple watch',
+                'correa smartwatch','correa galaxy watch','correa amazfit',
+                'soporte movil','soporte monitor','soporte portatil','brazo monitor',
+                'regleta','alargador','enchufe inteligente','temporizador electrico',
+            ],
+            'Libros': [
+                'libro','novela','ensayo','autobiografia','autobiografía','biografia','biografía',
+                'memorias','memorias de','manual de','guia de','guía de','introduccion a','introducción a',
+                'edicion','edición','editorial','tomo','volumen','coleccion','colección',
+                'crecimiento personal','desarrollo personal','superacion','superación',
+                'espiritualidad','meditacion','meditación','mindfulness','yoga sutras',
+                'finanzas personales','inversion','inversión','ahorro',
+                'historia de','historia del','historia de la',
+                'the art of','the power of','how to ','a guide to','introduction to',
+                'sabiduría','sabiduria','filosofia','filosofía',
+                '(conecta)','(alienta)','(deusto)','(paidos)','(paidós)','(planeta)','(booket)',
+                '(contemporánea)','(clave)','(perenne)','(obelisco)','(best seller)',
+                '(espiritualidad)','(transiciones)','(fuera de colección)',
+                'sin coleccion','sin colección','one shot',
+            ],
+            'Hogar y Moda': [
+                'camiseta','camisa','pantalon','pantalón','vaquero','jeans','chaqueta','abrigo',
+                'jersey','sudadera','vestido','falda','ropa interior','calcetin','calcetín',
+                'zapatilla','zapato','bota','sandalia','chancla','calzado',
+                'bolso','mochila','cartera','cinturon','cinturón','correa cuero',
+                'sarten','sartén','olla','cazo','wok','freidora','hervidor','cafetera',
+                'batidora','licuadora','exprimidor','tostadora','microondas',
+                'aspirador','aspiradora','fregona','escoba','recogedor','cubo basura',
+                'detergente','suavizante','lavavajillas','capsulas limpeza',
+                'sabana','sábana','funda nordica','funda nórdica','almohada','colchon','colchón','toalla',
+                'cortina','persiana','lampara','lámpara','bombilla','flexo',
+                'silla','mesa','escritorio','estante','estanteria','libreria mueble',
+                'sofa','sofá','puff','cojin','cojín','alfombra',
+                'paraguas','maleta','trolley',
+                'pañal','panal','biberon','biberón','chupete','cuna','carrito bebe','silla paseo',
+                'colchon cuna','sabana cuna','pijama bebe','babero','portabebe',
+                'ropa termica','ropa térmica','ropa deportiva','chandal','chándal',
+                'tirantes','correa reloj cuero','correa analogico',
+                'arbol navidad','árbol navidad','decoracion navidad','adorno navidad',
+                'marco fotos','album fotos','cuadro decoracion',
+                'tabla planchar','funda planchar','tendedero',
+                'organizador cables','caja almacenaje','contenedor cocina',
+                'jardin','jardín','maceta','regadera','manguera',
+            ],
+            'Salud y Belleza': [
+                'crema facial','crema hidratante','crema antiarrugas','crema corporal',
+                'serum','sérum','contorno ojos','mascarilla facial','tonico facial','tónico facial',
+                'protector solar','spf','bronceador',
+                'champu','champú','acondicionador','mascarilla pelo','aceite capilar',
+                'tinte pelo','decolorante','plancha pelo','rizador','secador pelo',
+                'maquillaje','base maquillaje','corrector','colorete','sombra ojos',
+                'labial','eyeliner','rimel','mascara pestañas',
+                'perfume','colonia','eau de toilette','eau de parfum','fragancia',
+                'desodorante','antitranspirante',
+                'vitamina','vitaminas','suplemento','omega 3','omega3','magnesio',
+                'colageno','colágeno','acido hialuronico','ácido hialurónico',
+                'biotina','zinc','selenio','hierro','calcio','probiotico','probiótico',
+                'creatina','proteina polvo','proteína polvo','whey','bcaa',
+                'pasta dental','cepillo dientes','hilo dental','enjuague bucal','irrigador bucal',
+                'rasuradora','maquinilla','cuchilla afeitar','espuma afeitar',
+                'cortauñas','lima uñas','esmalte uñas',
+                'aceite esencial','aceite aromaterapia','difusor aromas','humidificador aromas',
+                'aceite masaje','aceite corporal','aceite estrias','aceite estrías',
+                'crema antiestrias','crema antiestrías','crema reafirmante postparto',
+                'toallitas bebe','toallitas bebé','esponja bano bebe','gel bebe',
+                'termometro','tensiómetro','glucómetro','oxímetro',
+                'venda','apósito','gasas','botiquin',
+                'guantes latex','guantes nitrilo','mascarilla medica',
+                'pastillero','organizador medicamentos',
+                'masajeador','masajeador facial','rodillo jade','gua sha',
+                'cortapelos','afeitadora','depiladora','epiladora',
+                'bascula corporal','báscula corporal','medidor grasa',
+                'palo santo','vela aromatica','vela aromática','incienso',
+            ],
+            'Ocio y Deporte': [
+                'juguete','juego mesa','juego de mesa','puzzle','rompecabezas','lego',
+                'peluche','muneco','muñeco','figura coleccionable','funko pop',
+                'disfraz','halloween','carnaval',
+                'bicicleta','patines','patinete','scooter',
+                'pesas','mancuernas','barra pesas','banco pesas','rack pesas',
+                'esterilla yoga','esterilla deporte','colchoneta',
+                'banda elastica','banda elástica','goma fitness','cuerda saltar',
+                'pelota','balon','balón','raqueta','pala padel','padle','tenis',
+                'saco boxeo','guantes boxeo','casco ciclismo',
+                'running','zapatillas running','zapatillas deporte',
+                'caballete pintura','pincel','lienzo','acuarela','oleo','óleo',
+                'rotulador','ceras colores','plastilina','arcilla modelar',
+                'instrumento musical','guitarra','ukelele','violin','violín',
+                'piano','teclado musical','bateria musical','flauta',
+                'vinilo','disco vinilo','cd musica','cd música',
+                'pizarra','rotulador pizarra','tiza',
+                'camping','tienda campaña','saco dormir','mochila montaña',
+                'cometa','frisbee','bolos','dardos',
+                'trofeo','medalla deporte',
+                'juguete bebe','juguete bebé','mordedor','sonajero','movil cuna',
+                'osito peluche','muñeca','coche teledirigido','tren juguete',
+                'carta pokemon','carta magic','juego cartas',
+            ],
+            'Alimentación y Mascotas': [
+                'cafe','café','te verde','té verde','matcha','infusion','infusión',
+                'galleta','cookie','barrita energetica','barrita energética',
+                'chocolate','cacao','proteina vegetal','proteína vegetal',
+                'aceite oliva','aceite de oliva','vinagre','salsa',
+                'arroz','pasta alimentacion','harina','azucar','azúcar','sal marina',
+                'cereal','avena','granola','muesli',
+                'fruta seca','fruto seco','almendra','nuez','anacardo',
+                'bio','ecologico','ecológico','organico','orgánico','sin gluten',
+                'vegano','vegetariano','keto','paleo',
+                'suplemento deportivo','proteina bote','batido proteinas',
+                'comida perro','comida gato','pienso','snack mascota',
+                'arena gato','arenero','rascador gato','arbol rascador',
+                'comedero','bebedero','jaula','correa perro','collar perro',
+                'juguete gato','juguete perro','pelota mascota',
+                'antiparasitario','collar antiparasitario','pipeta',
+                'acuario','peces','alimento peces',
+                'leche formula','leche materna','sacaleches','bolsas leche',
+                'papilla','potito','puré bebe','purée bebé',
+                'agua filtro','filtro agua','jarra brita','cartucho brita',
+                'crema cacahuete','mantequilla cacahuete',
+            ]
+        };
+
+        // Normalizar texto para búsqueda
+        function normalizar(txt) {
+            return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+        }
+
+        // PASO 1: Clasificar con diccionario
+        function clasificarConDiccionario(titulo) {
+            const t = normalizar(titulo);
+            for (const [cat, keywords] of Object.entries(DICT)) {
+                if (keywords.some(k => t.includes(normalizar(k)))) return cat;
+            }
+            return null; // no clasificado
+        }
+
+        // Genera una clave de caché basada en los títulos únicos del CSV
+        async function hashCSV(titulos) {
+            const str = titulos.sort().join('|');
+            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return 'amzing_cat_' + Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2,'0')).join('').substring(0,16);
+        }
+
+        // PASO 2: Orquestador principal con caché
+        async function clasificarProductos(productos) {
+            const titulosUnicos = [...new Set(productos.map(p => p.titulo))];
+            const mapaCategoria = {};
+            const sinClasificar = [];
+
+            // Paso 1: diccionario
+            titulosUnicos.forEach(titulo => {
+                const cat = clasificarConDiccionario(titulo);
+                if (cat) mapaCategoria[titulo] = cat;
+                else sinClasificar.push(titulo);
+            });
+
+            // Aplicar diccionario y redibujar
+            productos.forEach(p => { p.categoria = mapaCategoria[p.titulo] || 'Otros'; });
+            actualizarTablaYMetricas();
+
+            if (sinClasificar.length === 0) return;
+
+            // Comprobar caché localStorage
+            const cacheKey = await hashCSV(titulosUnicos);
+            try {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    const mapaCache = JSON.parse(cached);
+                    // Aplicar solo los que no clasificó el diccionario
+                    productos.forEach(p => {
+                        if (!mapaCategoria[p.titulo] && mapaCache[p.titulo]) {
+                            p.categoria = mapaCache[p.titulo];
+                        }
+                    });
+                    actualizarTablaYMetricas();
+                    return; // No llamar a la IA
+                }
+            } catch(e) {}
+
+            // Sin caché y sin API → terminar
+            if (API_URL.includes('PEGA_AQUI')) return;
+
+            try {
+                // Paso 2: ejemplos dinámicos del diccionario
+                const ejemplosPorCat = {};
+                Object.entries(mapaCategoria).forEach(([titulo, cat]) => {
+                    if (!ejemplosPorCat[cat]) ejemplosPorCat[cat] = [];
+                    if (ejemplosPorCat[cat].length < 2) ejemplosPorCat[cat].push({ titulo, categoria: cat });
+                });
+                const ejemplos = Object.values(ejemplosPorCat).flat();
+
+                // Paso 3: LLM con few-shot dinámico en lotes de 150
+                const LOTE = 150;
+                const mapaIA = {};
+                for (let i = 0; i < sinClasificar.length; i += LOTE) {
+                    const lote = sinClasificar.slice(i, i + LOTE);
+                    const res  = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify({ action: 'clasificar', titulos: lote, ejemplos })
+                    });
+                    const data = await res.json();
+                    if (data.categorias) {
+                        lote.forEach((titulo, idx) => {
+                            mapaIA[titulo] = data.categorias[idx] || 'Otros';
+                        });
+                    }
+                }
+
+                // Aplicar categorías IA
+                productos.forEach(p => { p.categoria = mapaIA[p.titulo] || p.categoria; });
+                actualizarTablaYMetricas();
+
+                // Guardar en caché solo las clasificaciones IA
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(mapaIA));
+                } catch(e) {}
+
+            } catch(e) {
+                console.warn('Clasificación IA fallida, usando diccionario:', e);
+            }
+        }
+        // ── TOP 3 CATEGORÍAS (histórico completo, desvinculado de filtros) ──────────
+        const CATEGORIAS_META = [
+            { id: 'Tecnología',              icono: '💻', color: '#3b82f6' },
+            { id: 'Libros',                  icono: '📚', color: '#8b5cf6' },
+            { id: 'Hogar y Moda',            icono: '🏠', color: '#10b981' },
+            { id: 'Salud y Belleza',         icono: '💄', color: '#f43f5e' },
+            { id: 'Ocio y Deporte',          icono: '🎮', color: '#f59e0b' },
+            { id: 'Alimentación y Mascotas', icono: '🍽️', color: '#84cc16' },
+            { id: 'Otros',                   icono: '📦', color: '#94a3b8' },
+        ];
+
+        function renderizarTopCategorias() {
+            const totales = {};
+            CATEGORIAS_META.forEach(c => { totales[c.id] = 0; });
+            todosLosProductos.forEach(p => {
+                const cat = p.categoria || 'Otros';
+                totales[cat] = (totales[cat] || 0) + p.precio;
+            });
+
+            const totalSum = Object.values(totales).reduce((a,b) => a+b, 0);
+            const top3 = CATEGORIAS_META
+                .filter(c => totales[c.id] > 0)
+                .sort((a,b) => totales[b.id] - totales[a.id])
+                .slice(0, 3);
+
+            const medallas = ['🥇','🥈','🥉'];
+            const alturas  = ['text-4xl','text-3xl','text-2xl'];
+            const fondos   = ['bg-amber-50 border-amber-300','bg-slate-50 border-slate-200','bg-orange-50 border-orange-200'];
+
+            const grid = document.getElementById('top-categorias-grid');
+            grid.innerHTML = top3.map((c, i) => {
+                const val = totales[c.id];
+                const pct = ((val / totalSum) * 100).toFixed(1);
+                const barW = Math.round((val / totales[top3[0].id]) * 100);
+                return `
+                <div class="flex items-center gap-4 p-4 rounded-xl border ${fondos[i]} transition-all">
+                    <span class="${alturas[i]} shrink-0">${medallas[i]}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="${i===0 ? 'text-2xl' : i===1 ? 'text-xl' : 'text-lg'} shrink-0">${c.icono}</span>
+                            <span class="${i===0 ? 'text-lg font-black' : i===1 ? 'text-base font-bold' : 'text-sm font-semibold'} text-slate-900">${c.id}</span>
+                            <span class="ml-auto text-xs font-bold text-slate-500">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 mb-1">
+                            <div class="h-1.5 rounded-full transition-all" style="width:${barW}%;background:${c.color}"></div>
+                        </div>
+                        <p class="${i===0 ? 'text-base font-black' : 'text-sm font-bold'}" style="color:${c.color}">${val.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</p>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Ocultar spinner y mostrar grid
+            document.getElementById('top-categorias-loading').classList.add('hidden');
+            grid.classList.remove('hidden');
+        }
+
+        // Llamada pública — se invoca tras clasificar o al cargar
+        function actualizarGraficoCategorias() {
+            renderizarTopCategorias();
+        }
+
+        function calcularTendencias() {
+            // 1. Día más activo — getDay(): 0=dom,1=lun,2=mar,3=mié,4=jue,5=vie,6=sáb
+            const diasNombre  = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+            const diasPlural  = ["domingos","lunes","martes","miércoles","jueves","viernes","sábados"];
+            const contDias   = Array(7).fill(0);
+            const contHoras  = Array(24).fill(0);
+            const contTrimestres = {Q1:0, Q2:0, Q3:0, Q4:0};
+            const gastoPorTrimestre = {Q1:0, Q2:0, Q3:0, Q4:0};
+
+            // Contar por pedidos únicos, no por filas de producto
+            const pedidosVistosDia = new Set();
+            todosLosProductos.forEach(p => {
+                if (!pedidosVistosDia.has(p.orderKey)) {
+                    pedidosVistosDia.add(p.orderKey);
+                    contDias[p.diaSemana]++;
+                }
+                if (p.hora !== undefined) contHoras[p.hora]++;
+                const mes = new Date(p.fechaRaw).getMonth() + 1;
+                const q = mes <= 3 ? 'Q1' : mes <= 6 ? 'Q2' : mes <= 9 ? 'Q3' : 'Q4';
+                contTrimestres[q]++;
+                gastoPorTrimestre[q] += p.precio;
+            });
+
+            // Encontrar el día con más pedidos correctamente
+            let diaPico = 0;
+            for (let i = 1; i < 7; i++) {
+                if (contDias[i] > contDias[diaPico]) diaPico = i;
+            }
+            const totalPedidosUnicos = pedidosVistosDia.size;
+            const diaNombrePlural = diasPlural[diaPico].charAt(0).toUpperCase() + diasPlural[diaPico].slice(1);
+            const diaNombre = diasNombre[diaPico].charAt(0).toUpperCase() + diasNombre[diaPico].slice(1);
+            const pctDia = Math.round((contDias[diaPico] / totalPedidosUnicos) * 100);
+
+            // 2. Franja horaria
+            const mañana = contHoras.slice(6,12).reduce((a,b)=>a+b,0);
+            const tarde  = contHoras.slice(12,20).reduce((a,b)=>a+b,0);
+            const noche  = contHoras.slice(20,24).reduce((a,b)=>a+b,0) + contHoras.slice(0,6).reduce((a,b)=>a+b,0);
+            const totalConHora = mañana + tarde + noche;
+            let franjaTexto, franjaIcono;
+            if (totalConHora > 0) {
+                const maxFranja = Math.max(mañana, tarde, noche);
+                if (maxFranja === mañana) { franjaTexto = `mañanero. El ${Math.round(mañana/totalConHora*100)}% de tus pedidos son antes de las 12h`; franjaIcono = '🌅'; }
+                else if (maxFranja === tarde) { franjaTexto = `de tarde. El ${Math.round(tarde/totalConHora*100)}% de tus pedidos son entre las 12h y las 20h`; franjaIcono = '☀️'; }
+                else { franjaTexto = `nocturno. El ${Math.round(noche/totalConHora*100)}% de tus pedidos son después de las 20h`; franjaIcono = '🌙'; }
+            }
+
+            // 3. Trimestre top por gasto
+            const qMax = Object.keys(gastoPorTrimestre).reduce((a,b) => gastoPorTrimestre[a] > gastoPorTrimestre[b] ? a : b);
+            const pctQ  = Math.round((gastoPorTrimestre[qMax] / totalHistorico) * 100);
+            const qNombres = { Q1:'primer trimestre (ene-mar)', Q2:'segundo trimestre (abr-jun)', Q3:'tercer trimestre (jul-sep)', Q4:'cuarto trimestre (oct-dic)' };
+            const qEmoji  = { Q1:'❄️', Q2:'🌸', Q3:'☀️', Q4:'🍂' };
+
+            // 4. Frecuencia de compra
+            const pedidosDistintos = new Set(todosLosProductos.map(p => p.orderKey)).size;
+            const fechaMin = Math.min(...todosLosProductos.map(p => p.fechaRaw));
+            const fechaMax = Math.max(...todosLosProductos.map(p => p.fechaRaw));
+            const diasTotal = Math.round((fechaMax - fechaMin) / (1000*60*60*24));
+            const cadaCuantos = diasTotal > 0 ? Math.round(diasTotal / pedidosDistintos) : 0;
+            let frecuenciaTexto;
+            if (cadaCuantos <= 3)       frecuenciaTexto = 'casi a diario. Amazon es tu segunda despensa.';
+            else if (cadaCuantos <= 7)  frecuenciaTexto = 'cada pocos días. El carrito nunca está vacío.';
+            else if (cadaCuantos <= 14) frecuenciaTexto = 'cada semana y media aproximadamente.';
+            else if (cadaCuantos <= 30) frecuenciaTexto = 'cada vez que lo necesitas, sin obsesión.';
+            else                         frecuenciaTexto = 'espaciado. Compras con propósito.';
+
+            // 5. Ticket medio por pedido
+            const ticketMedio = totalHistorico / (pedidosDistintos || 1);
+            let ticketTexto, ticketIcono;
+            if (ticketMedio < 30)       { ticketTexto = 'Más picoteo que grandes decisiones.'; ticketIcono = '🪙'; }
+            else if (ticketMedio < 80)  { ticketTexto = 'Compras reflexivas, ni impulsivo ni austero.'; ticketIcono = '⚖️'; }
+            else                         { ticketTexto = 'Pocas compras pero de peso. Vas a por todas cuando decides.'; ticketIcono = '💎'; }
+
+            // Renderizar tarjetas
+            // 6. Huella logística por provincia (distancia al centro logístico Amazon más cercano)
+            // Centros: Madrid (28), Barcelona (08), Sevilla (41), Zaragoza (50), Valencia (46)
+            const DIST_CP = {
+                '01':270,'02':280,'03':310,'04':490,'05':200,'06':420,'07':700,'08':20,
+                '09':220,'10':380,'11':560,'12':340,'13':280,'14':380,'15':650,'16':240,
+                '17':130,'18':370,'19':170,'20':490,'21':540,'22':150,'23':350,'24':360,
+                '25':160,'26':280,'27':580,'28':30,'29':520,'30':430,'31':330,'32':500,
+                '33':450,'34':250,'35':1700,'36':620,'37':210,'38':1600,'39':380,'40':160,
+                '41':20,'42':230,'43':190,'44':250,'45':100,'46':20,'47':200,'48':470,
+                '49':280,'50':20,'51':780,'52':790
+            };
+            const pedidosTotales = new Set(todosLosProductos.map(p => p.orderKey)).size;
+            let kmTotales = 0;
+            const pedidosVistos = new Set();
+            todosLosProductos.forEach(p => {
+                if (!pedidosVistos.has(p.orderKey)) {
+                    pedidosVistos.add(p.orderKey);
+                    const dist = DIST_CP[p.cp2] || 200;
+                    kmTotales += dist;
+                }
+            });
+            const kgCO2 = Math.round(kmTotales * 0.2);
+            let co2Texto;
+            if (kgCO2 < 10)        co2Texto = 'equivale a cargar el móvil 1.000 veces.';
+            else if (kgCO2 < 50)   co2Texto = `equivale a conducir un coche ${Math.round(kgCO2/0.12)} km.`;
+            else if (kgCO2 < 200)  co2Texto = `equivale a ${Math.round(kgCO2/21)} árboles absorbiendo CO₂ durante un año.`;
+            else                    co2Texto = `equivale a ${Math.round(kgCO2/21)} árboles absorbiendo CO₂ durante un año.`;
+
+            const tendencias = [
+                { icono: '📅', titulo: 'Día más activo', texto: `Compras más los <strong>${diaNombrePlural}</strong>. Representan el ${pctDia}% de tus pedidos.` },
+                ...(totalConHora > 0 ? [{ icono: franjaIcono, titulo: 'Franja horaria', texto: `Eres un comprador <strong>${franjaTexto}</strong>.` }] : []),
+                { icono: qEmoji[qMax], titulo: 'Trimestre top', texto: `El <strong>${pctQ}%</strong> de tu gasto histórico ocurre en el <strong>${qNombres[qMax]}</strong>.` },
+                { icono: '🔄', titulo: 'Frecuencia de compra', texto: `Haces un pedido <strong>cada ${cadaCuantos} días</strong> de media — ${frecuenciaTexto}` },
+                { icono: ticketIcono, titulo: 'Ticket medio por pedido', texto: `Tu pedido medio es de <strong>${ticketMedio.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</strong>. ${ticketTexto}` },
+                { icono: '🚚', titulo: 'Huella logística', texto: `Tus <strong>${pedidosTotales} pedidos</strong> han recorrido ~<strong>${kmTotales.toLocaleString('es-ES')} km</strong>. Necesitarías plantar <strong>${Math.round(kgCO2/21).toLocaleString('es-ES')} árboles</strong> para limpiar el CO₂ generado.` },
+            ];
+
+            const grid = document.getElementById('tendencias-grid');
+            grid.innerHTML = tendencias.map(t => `
+                <div class="bg-white rounded-xl p-4 border border-amber-100 flex gap-3">
+                    <span class="text-2xl shrink-0">${t.icono}</span>
+                    <div>
+                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-0.5">${t.titulo}</p>
+                        <p class="text-sm text-slate-700 leading-snug">${t.texto}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+
+        async function actualizarEquivalenciaBTC(totalEUR) {
+            try {
+                const res  = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur');
+                const data = await res.json();
+                const precioBTC = data.bitcoin.eur;
+                const btcEquiv  = totalEUR / precioBTC;
+                const pctBTC    = (btcEquiv * 100).toFixed(2);
+
+                document.getElementById('eq-btc').textContent     = `${btcEquiv.toFixed(6)} BTC`;
+                document.getElementById('eq-btc-sub').textContent = '';
+            } catch {
+                document.getElementById('eq-btc').textContent     = 'No disponible';
+                document.getElementById('eq-btc-sub').textContent = 'No se pudo obtener el precio';
+            }
+        }
+
+        let sortEstado = { campo: 'fecha', asc: false }; // por defecto fecha desc (más reciente primero)
+
+        function ordenarTabla(campo) {
+            if (sortEstado.campo === campo) {
+                sortEstado.asc = !sortEstado.asc;
+            } else {
+                sortEstado.campo = campo;
+                sortEstado.asc = campo === 'precio' ? false : true;
+            }
+            const iconFecha  = document.getElementById('sort-icon-fecha');
+            const iconPrecio = document.getElementById('sort-icon-precio');
+            if (iconFecha)  iconFecha.textContent  = sortEstado.campo === 'fecha'  ? (sortEstado.asc ? '↑' : '↓') : '↕';
+            if (iconPrecio) iconPrecio.textContent = sortEstado.campo === 'precio' ? (sortEstado.asc ? '↑' : '↓') : '↕';
+            const base = productosFiltradosActuales();
+            const ordenados = [...base].sort((a, b) => {
+                if (campo === 'fecha')  return sortEstado.asc ? a.fechaRaw - b.fechaRaw : b.fechaRaw - a.fechaRaw;
+                if (campo === 'precio') return sortEstado.asc ? a.precio - b.precio     : b.precio - a.precio;
+                return 0;
+            });
+            renderizarTabla(ordenados);
+        }
+
+        function productosFiltradosActuales() {
+            return productosFiltrados();
+        }
+
+        // ── DIGITAL CONTENT (PRIME) ───────────────────────────────────────────────
+        function procesarDigitalContent(texto) {
+            const filas = segmentarCSVTexto(texto);
+            if (filas.length < 2) return;
+
+            const cab = filas[0].map(c => c.toLowerCase().trim());
+            const idxNombre = cab.findIndex(c => c.includes('product name'));
+            const idxStatus = cab.findIndex(c => c === 'order status');
+            const idxComp   = cab.findIndex(c => c.includes('component type'));
+            const idxPrice  = cab.findIndex(c => c === 'price');
+            const idxFecha  = cab.findIndex(c => c === 'order date');
+
+            let totalPrime = 0;
+            const aniosPrime = new Set();
+
+            for (let i = 1; i < filas.length; i++) {
+                const f = filas[i];
+                if (!f || f.length < 3) continue;
+                const nombre = idxNombre !== -1 ? f[idxNombre] : '';
+                const status = idxStatus !== -1 ? f[idxStatus] : '';
+                const comp   = idxComp   !== -1 ? f[idxComp]   : '';
+                const precio = idxPrice  !== -1 ? f[idxPrice]  : '';
+                const fecha  = idxFecha  !== -1 ? f[idxFecha]  : '';
+
+                if (!nombre.toLowerCase().includes('prime membership')) continue;
+                if (status !== 'SUCCESS') continue;
+                if (comp !== 'Price Amount') continue;
+
+                const p = parsearPrecio(precio);
+                if (!isNaN(p) && p > 0) totalPrime += p;
+                if (fecha) aniosPrime.add(fecha.substring(0, 4));
+            }
+
+            const elPrime = document.getElementById('stat-prime');
+            const elAnios = document.getElementById('stat-prime-anios');
+            if (elPrime) {
+                if (totalPrime > 0) {
+                    elPrime.textContent = totalPrime.toLocaleString('es-ES', {style:'currency', currency:'EUR'});
+                    elAnios.textContent = `(${aniosPrime.size} año${aniosPrime.size === 1 ? '' : 's'})`;
+                } else {
+                    elPrime.textContent = '-';
+                    elAnios.textContent = '';
+                }
+            }
+        }
+
+        // ── PANTALLA DE CARGA ─────────────────────────────────────────────────────
+        let loadingResolve = null;
+
+        const PASOS_CARGA = [
+            { pct: 5,  msg: 'Leyendo tu historial de Amazon...' },
+            { pct: 15, msg: 'Desempaquetando pedidos...' },
+            { pct: 28, msg: 'Calculando cuánto has gastado 💸' },
+            { pct: 42, msg: 'Identificando tu perfil comprador...' },
+            { pct: 55, msg: 'Preparando gráficos y estadísticas...' },
+            { pct: 67, msg: 'Midiendo tu huella logística 🚚' },
+            { pct: 78, msg: 'Clasificando productos por categoría...' },
+            { pct: 88, msg: 'Calculando equivalencias curiosas 🍺' },
+            { pct: 95, msg: 'Últimos retoques...' },
+            { pct: 99, msg: '¡Casi listo!' },
+        ];
+
+        function mostrarCargando() {
+            document.getElementById('loading-screen').classList.remove('hidden');
+            document.getElementById('loading-bar').style.width = '0%';
+            document.getElementById('loading-pct').textContent  = '0%';
+            document.getElementById('loading-step').textContent = PASOS_CARGA[0].msg;
+            document.getElementById('loading-countdown').textContent = 'Aproximadamente 10 segundos';
+
+            return new Promise(resolve => {
+                loadingResolve = resolve;
+                let seg = 0;
+                const total = 10;
+                const intervalo = setInterval(() => {
+                    seg++;
+                    const pct = Math.min(Math.round((seg / total) * 100), 99);
+                    const paso = [...PASOS_CARGA].reverse().find(p => pct >= p.pct) || PASOS_CARGA[0];
+                    document.getElementById('loading-bar').style.width  = pct + '%';
+                    document.getElementById('loading-pct').textContent  = pct + '%';
+                    document.getElementById('loading-step').textContent = paso.msg;
+                    const restantes = Math.max(total - seg, 1);
+                    document.getElementById('loading-countdown').textContent =
+                        `Aproximadamente ${restantes} segundo${restantes === 1 ? '' : 's'}`;
+                    if (seg >= total) {
+                        clearInterval(intervalo);
+                        document.getElementById('loading-countdown').textContent = '';
+                        resolve(); // señal: el temporizador ha terminado
+                    }
+                }, 1000);
+            });
+        }
+
+        function actualizarCargando(msg, pct) {
+            // no-op: los mensajes los gestiona el temporizador
+        }
+
+        function ocultarCargando() {
+            document.getElementById('loading-bar').style.width  = '100%';
+            document.getElementById('loading-pct').textContent  = '100%';
+            document.getElementById('loading-step').textContent = '¡Listo!';
+            document.getElementById('loading-countdown').textContent = '';
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('loading-bar').style.width = '0%';
+            }, 400);
+        }
+
+        function mostrarError(msg) {
+            const banner = document.getElementById('error-banner');
+            document.getElementById('error-mensaje').textContent = msg;
+            banner.classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function ocultarError() {
+            document.getElementById('error-banner').classList.add('hidden');
+        }
+
+        // ── DRAG & DROP ───────────────────────────────────────────────────────────
+        const fileInput   = document.getElementById('csv-file');
+        const dropArea    = document.getElementById('drop-area');
+
+        dropArea.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); dropArea.classList.add('border-amber-400','bg-amber-50/30'); });
+        dropArea.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); dropArea.classList.add('border-amber-400','bg-amber-50/30'); });
+        dropArea.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropArea.classList.remove('border-amber-400','bg-amber-50/30'); });
+        dropArea.addEventListener('drop', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('border-amber-400','bg-amber-50/30');
+            if (e.dataTransfer.files.length > 0) leerArchivoNativo(e.dataTransfer.files[0]);
+        });
+        document.getElementById('btn-seleccionar').addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+        dropArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => { if (e.target.files.length > 0) leerArchivoNativo(e.target.files[0]); });
+
+        // El buscador está dentro del desplegable — listener delegado al documento
+        document.addEventListener('input', e => {
+            if (e.target.id !== 'tabla-search') return;
+            const b = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+            const base = productosFiltrados();
+            if (!b) { renderizarTabla(base); return; }
+            renderizarTabla(base.filter(p =>
+                p.buscarTxt.includes(b) || p.fechaStr.includes(b) || p.nombreMesTxt.includes(b) || `${p.nombreMesTxt} ${p.anio}`.includes(b)
+            ));
+        });
+
+        // ── LECTURA DE ARCHIVO ────────────────────────────────────────────────────
+        function leerArchivoNativo(file) {
+            ocultarError();
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                mostrarError('Por favor sube el archivo ZIP descargado de Amazon.');
+                return;
+            }
+            const timerPromise = mostrarCargando();
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const zip = await JSZip.loadAsync(e.target.result);
+                    let csvEntry = null;
+                    let csvFallback = null;
+                    zip.forEach((path, entry) => {
+                        if (entry.dir) return;
+                        const nombre = entry.name.toLowerCase();
+                        if (nombre.includes('order history.csv') ||
+                            nombre.includes('order_history.csv') ||
+                            nombre.includes('orderhistory.csv') ||
+                            (nombre.includes('historial') && nombre.endsWith('.csv')) ||
+                            (nombre.includes('commandes') && nombre.endsWith('.csv')) ||
+                            (nombre.includes('bestellhistorie') && nombre.endsWith('.csv')) ||
+                            (nombre.includes('ordini') && nombre.endsWith('.csv'))) {
+                            csvEntry = entry;
+                        } else if (nombre.endsWith('.csv') && !csvFallback &&
+                                   !nombre.includes('digital') && !nombre.includes('return') && !nombre.includes('refund')) {
+                            csvFallback = entry;
+                        }
+                    });
+                    const archivo = csvEntry || csvFallback;
+                    if (!archivo) {
+                        ocultarCargando();
+                        mostrarError('No se encontró el archivo de historial en el ZIP. Asegúrate de que es el archivo descargado de Amazon.');
+                        return;
+                    }
+                    const texto = await archivo.async('string');
+                    // Buscar Digital Content Orders para datos Prime
+                    let entryPrime = null;
+                    zip.forEach((path, entry) => {
+                        if (!entry.dir && entry.name.toLowerCase().includes('digital content orders.csv')) {
+                            entryPrime = entry;
+                        }
+                    });
+                    if (entryPrime) {
+                        const csvPrime = await entryPrime.async('string');
+                        procesarDigitalContent(csvPrime);
+                    }
+                    procesarTextoPlanoBlindado(texto, timerPromise);
+                } catch(err) {
+                    ocultarCargando();
+                    mostrarError('Error al leer el ZIP: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ── PARSER DE PRECIO MULTI-PAÍS ───────────────────────────────────────────
+        function parsearPrecio(str) {
+            // Eliminar cualquier símbolo de moneda y espacios
+            let s = str.replace(/[€$£¥₹元₩₺₽฿\s\u00A0]/g, '').trim();
+            if (!s) return NaN;
+
+            // Eliminar posibles comillas
+            s = s.replace(/["']/g, '');
+
+            const tienePunto  = s.includes('.');
+            const tieneComa   = s.includes(',');
+
+            if (tienePunto && tieneComa) {
+                // Ambos separadores: el último es decimal
+                // "1.234,56" → ES/DE/FR  |  "1,234.56" → EN/US
+                const ultimoPunto = s.lastIndexOf('.');
+                const ultimaComa  = s.lastIndexOf(',');
+                if (ultimaComa > ultimoPunto) {
+                    // Coma es decimal → "1.234,56"
+                    return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+                } else {
+                    // Punto es decimal → "1,234.56"
+                    return parseFloat(s.replace(/,/g, ''));
+                }
+            } else if (tieneComa && !tienePunto) {
+                // Solo coma: puede ser decimal ES ("99,99") o miles EN ("1,234")
+                const partesComa = s.split(',');
+                const ultimaParte = partesComa[partesComa.length - 1];
+                if (partesComa.length === 2 && ultimaParte.length !== 3) {
+                    // Coma decimal: "99,99" → 99.99
+                    return parseFloat(s.replace(',', '.'));
+                } else {
+                    // Coma de miles: "1,234" → 1234
+                    return parseFloat(s.replace(/,/g, ''));
+                }
+            } else if (tienePunto && !tieneComa) {
+                // Solo punto: puede ser decimal EN ("99.99") o miles ES ("1.234")
+                const partesPunto = s.split('.');
+                const ultimaParte = partesPunto[partesPunto.length - 1];
+                if (partesPunto.length === 2 && ultimaParte.length !== 3) {
+                    // Punto decimal: "99.99" → 99.99
+                    return parseFloat(s);
+                } else {
+                    // Punto de miles: "1.234" → 1234
+                    return parseFloat(s.replace(/\./g, ''));
+                }
+            }
+            return parseFloat(s);
+        }
+
+        // ── PARSER CSV ────────────────────────────────────────────────────────────
+        function segmentarCSVTexto(texto) {
+            const lineas = [];
+            let filaActual = [], celdaActual = "", dentroDeComillas = false;
+            for (let i = 0; i < texto.length; i++) {
+                const c = texto[i], sig = texto[i+1];
+                if (c === '"') {
+                    if (dentroDeComillas && sig === '"') { celdaActual += '"'; i++; }
+                    else dentroDeComillas = !dentroDeComillas;
+                } else if (c === ',' && !dentroDeComillas) {
+                    filaActual.push(celdaActual.trim()); celdaActual = "";
+                } else if ((c === '\r' || c === '\n') && !dentroDeComillas) {
+                    if (c === '\r' && sig === '\n') i++;
+                    filaActual.push(celdaActual.trim());
+                    if (filaActual.length > 1 || filaActual[0] !== "") lineas.push(filaActual);
+                    filaActual = []; celdaActual = "";
+                } else celdaActual += c;
+            }
+            if (celdaActual || filaActual.length > 0) { filaActual.push(celdaActual.trim()); lineas.push(filaActual); }
+            return lineas;
+        }
+
+        // ── PROCESAMIENTO PRINCIPAL ───────────────────────────────────────────────
+        async function procesarTextoPlanoBlindado(textoBruto, timerPromise) {
+            actualizarCargando('Leyendo estructura del archivo...', 15);
+
+            // Algunos CSVs de Amazon empiezan con " extra antes de ASIN y usan "" en lugar de "
+            // Byte 0 = 34 (") y byte 6-7 = 34,34 ("") indica este formato
+            let texto = textoBruto;
+            const primeraLinea = texto.split('\n')[0];
+            if (primeraLinea.startsWith('"') && primeraLinea.includes('""')) {
+                // Quitar la comilla inicial extra y normalizar "" → "
+                if (texto.charAt(0) === '"' && texto.charAt(1) !== '"') {
+                    texto = texto.substring(1);
+                }
+                texto = texto.replace(/""/g, '"');
+            }
+            const filas = segmentarCSVTexto(texto);
+            if (filas.length < 2) { ocultarCargando(); return mostrarError("El archivo está vacío o no es procesable."); }
+
+            const cabOrig = filas[0];
+            const cab = cabOrig.map(h => h.replace(/["']/g,"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim());
+
+            let idxFecha  = cab.findIndex(c => (c.includes('date')||c.includes('fecha')||c.includes('datum')||c.includes('data')||c.includes('date de')) && !c.includes('ship') && !c.includes('envio') && !c.includes('livr'));
+            let idxTotal  = cab.findIndex(c => ['total amount','total owed','total de la orden','total','total gastado','gesamtbetrag','montant total','totale','合計'].includes(c));
+            let idxProd   = cabOrig.findIndex(h => h.trim() === "Product Name");
+            if (idxProd === -1) idxProd = cab.findIndex(c => c.includes('product name')||c.includes('title')||c.includes('nombre del producto')||c.includes('titulo')||c.includes('produktname')||c.includes('nom du produit')||c.includes('nome prodotto'));
+            let idxASIN   = cab.findIndex(c => c === 'asin' || c.includes('asin/isbn'));
+            let idxOrder  = cab.findIndex(c => c === 'order id' || c === 'order number' || c === 'numero de pedido' || c.includes('order id') || c.includes('bestellnummer') || c.includes('numéro de commande'));
+            if (idxFecha === -1) idxFecha = cab.findIndex(c => c.includes('date')||c.includes('fecha')||c.includes('datum'));
+            if (idxTotal === -1) idxTotal = cab.findIndex(c => c.includes('total') && !c.includes('subtotal'));
+            if (idxFecha === -1 || idxTotal === -1) return mostrarError("No se ha podido localizar la estructura de Fecha y Total en este archivo CSV.");
+
+            totalHistorico = 0; mediaMensual = 0; todosLosProductos = [];
+            const gastoPorMes = {}, gastoPorAnio = {};
+
+            for (let i = 1; i < filas.length; i++) {
+                const f = filas[i];
+                if (f.length <= Math.max(idxFecha, idxTotal)) continue;
+                const fechaStr = f[idxFecha], totalStr = f[idxTotal];
+                if (!fechaStr || !totalStr) continue;
+                const total = parsearPrecio(totalStr);
+                if (isNaN(total) || total <= 0) continue;
+                totalHistorico += total;
+
+                let fecha = new Date(fechaStr);
+                if (isNaN(fecha.getTime())) {
+                    const p = fechaStr.split(/[-/T ]/);
+                    if (p.length >= 3) {
+                        if (p[2].substring(0,4).length === 4) fecha = new Date(parseInt(p[2].substring(0,4)), parseInt(p[1])-1, parseInt(p[0]));
+                        else if (p[0].length === 4) fecha = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
+                    }
+                }
+                if (isNaN(fecha.getTime())) continue;
+
+                const anio = fecha.getFullYear(), numMes = fecha.getMonth();
+                const mesKey = `${anio}-${String(numMes+1).padStart(2,'0')}`;
+                gastoPorMes[mesKey]  = (gastoPorMes[mesKey]  || 0) + total;
+                gastoPorAnio[anio]   = (gastoPorAnio[anio]   || 0) + total;
+
+                const titulo   = (idxProd !== -1 ? f[idxProd] : "Artículo de catálogo").replace(/^["']|["']$/g,'').trim() || "Artículo de catálogo";
+                const asin     = idxASIN  !== -1 ? f[idxASIN].trim()  : "";
+                const orderKey = idxOrder !== -1 ? f[idxOrder].trim() : fechaStr.trim();
+
+                // Código postal de envío
+                let idxShip = -1;
+                if (idxShip === -1) idxShip = cab.findIndex(c => c.includes('shipping address'));
+                const shipAddr = idxShip !== -1 ? f[idxShip] : '';
+                const cpMatch  = shipAddr.match(/\b(\d{5})\b/);
+                const cp2      = cpMatch ? cpMatch[1].substring(0, 2) : '';
+
+                todosLosProductos.push({
+                    fechaStr:     fecha.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'}),
+                    fechaRaw:     fecha.getTime(),
+                    hora:         fecha.getHours(),
+                    diaSemana:    fecha.getDay(), // 0=dom, 1=lun...
+                    anio:         anio.toString(),
+                    nombreMesTxt: nombresMeses[numMes] || "",
+                    titulo, asin, orderKey, cp2, precio: total,
+                    buscarTxt: titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+                });
+            }
+
+            if (totalHistorico === 0) { ocultarCargando(); return mostrarError("No se han podido computar registros económicos válidos."); }
+
+            actualizarCargando('Calculando estadísticas...', 45);
+            todosLosProductos.sort((a,b) => b.fechaRaw - a.fechaRaw);
+            const mesesActivos = Object.keys(gastoPorMes).length;
+            mediaMensual = totalHistorico / (mesesActivos || 1);
+
+            // Perfil
+            const aniosHistorial = new Date().getFullYear() - Math.min(...Object.keys(gastoPorAnio).map(Number));
+            const miNivel  = determinarNivel(aniosHistorial);
+            const miPerfil = determinarPerfil(totalHistorico, miNivel.nivel);
+            perfilActual   = { icono: miPerfil.icono, nombre: miPerfil.nombre };
+            document.getElementById('perfil-icono').textContent     = miPerfil.icono;
+            document.getElementById('perfil-nombre').textContent    = miPerfil.nombre;
+            document.getElementById('perfil-estrellas').textContent = miNivel.estrellas;
+            document.getElementById('perfil-frase').textContent     = miPerfil.frase;
+            document.getElementById('perfil-usuario').classList.remove('hidden');
+
+            // Año más caro
+            let anioMax = '-', maxGA = 0;
+            for (const a in gastoPorAnio) { if (gastoPorAnio[a] > maxGA) { maxGA = gastoPorAnio[a]; anioMax = a; } }
+
+            // Stats
+            const pedidosDistintosTotal = new Set(todosLosProductos.map(p => p.orderKey)).size;
+            document.getElementById('stat-antiguedad').textContent = `${aniosHistorial} año${aniosHistorial === 1 ? '' : 's'}`;
+            document.getElementById('stat-total').textContent = totalHistorico.toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+            document.getElementById('stat-pedidos').textContent = pedidosDistintosTotal.toLocaleString('es-ES');
+            document.getElementById('stat-media').textContent = mediaMensual.toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+            document.getElementById('stat-anio').textContent  = anioMax;
+
+            // Equivalencias
+            const numCanas = Math.round(totalHistorico / 2.0);
+            document.getElementById('eq-canas').textContent     = `${numCanas.toLocaleString('es-ES')} cañas`;
+            document.getElementById('eq-canas-sub').textContent = `(${(numCanas*0.25).toFixed(1).replace('.',',')} litros de cerveza)`;
+            const numDep = Math.round(totalHistorico / 80);
+            document.getElementById('eq-gasolina').textContent     = `${numDep.toLocaleString('es-ES')} depósitos`;
+            document.getElementById('eq-gasolina-sub').textContent = `(${(numDep*750).toLocaleString('es-ES')} km recorridos)`;
+            const numNet = Math.round(totalHistorico / 13);
+            document.getElementById('eq-netflix').textContent     = `${numNet.toLocaleString('es-ES')} meses`;
+            document.getElementById('eq-netflix-sub').textContent = `(${(numNet/12).toFixed(1).replace('.',',')} años)`;
+
+            // Bitcoin — precio en tiempo real
+            actualizarEquivalenciaBTC(totalHistorico);
+
+            actualizarCargando('Preparando gráficos...', 70);
+            const tablaSearch = document.getElementById('tabla-search');
+            if (tablaSearch) tablaSearch.value = '';
+            renderizarGraficos(gastoPorMes, gastoPorAnio);
+            actualizarCargando('Clasificando productos...', 85);
+            actualizarTablaYMetricas();
+            calcularTendencias();
+
+            // Esperar a que termine el temporizador de carga antes de mostrar resultados
+            if (timerPromise) await timerPromise;
+
+            document.getElementById('upload-zone').classList.add('hidden');
+            document.getElementById('results-dashboard').classList.remove('hidden');
+            ocultarCargando();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Registrar análisis con hash de los 10 pedidos más antiguos (deduplicación)
+            if (!API_URL.includes('PEGA_AQUI')) {
+                try {
+                    const pedidosOrdenados = [...todosLosProductos].sort((a,b) => a.fechaRaw - b.fechaRaw);
+                    const primeros10 = [...new Set(pedidosOrdenados.map(p => p.orderKey))].slice(0, 10);
+                    const str = primeros10.join('|');
+                    const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+                    const hashAnalisis = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2,'0')).join('').substring(0, 16);
+                    const r = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify({ action: 'ping', id: hashAnalisis })
+                    });
+                    const d = await r.json();
+                    // Actualizar contador en portada con el nuevo valor
+                    if (d.count) {
+                        const n = d.count;
+                        const el = document.getElementById('contador-texto');
+                        if (el) el.textContent = `${n.toLocaleString('es-ES')} análisis realizados`;
+                    }
+                } catch(e) {}
+            }
+
+            // Clasificación en segundo plano: diccionario + few-shot dinámico
+            clasificarProductos(todosLosProductos);
+        }
+
+        // ── TABLA ─────────────────────────────────────────────────────────────────
+        function renderizarTabla(productos) {
+            const bodyDesktop = document.getElementById('tabla-productos-body-desktop');
+            const bodyMobile  = document.getElementById('tabla-productos-body-mobile');
+            bodyDesktop.innerHTML = '';
+            bodyMobile.innerHTML  = '';
+
+            if (!productos.length) {
+                const empty = `<tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">No se encontraron artículos</td></tr>`;
+                bodyDesktop.innerHTML = empty;
+                bodyMobile.innerHTML  = `<p class="text-center text-slate-400 py-8 text-sm">No se encontraron artículos</p>`;
+                return;
+            }
+
+            productos.forEach(p => {
+                const url = p.asin ? `https://www.amazon.es/dp/${p.asin.trim()}?tag=pnlrt-21` : `https://www.amazon.es/s?k=${encodeURIComponent(p.titulo)}&tag=pnlrt-21`;
+
+                bodyDesktop.insertAdjacentHTML('beforeend', `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+                        <td class="px-4 py-3 font-mono text-xs text-slate-500">${p.fechaStr}</td>
+                        <td class="px-4 py-3 font-medium text-slate-700 truncate max-w-md" title="${p.titulo}">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer" class="text-amber-600 hover:text-amber-700 hover:underline inline-flex items-center gap-1">
+                                ${p.titulo}<i data-lucide="external-link" class="w-3 h-3 inline"></i>
+                            </a>
+                        </td>
+                        <td class="px-4 py-3 text-right font-bold text-slate-900">${p.precio.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</td>
+                    </tr>`);
+
+                bodyMobile.insertAdjacentHTML('beforeend', `
+                    <a href="${url}" target="_blank" rel="noopener noreferrer"
+                        class="flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50/30 transition-colors active:bg-amber-50">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-amber-600 truncate leading-snug">${p.titulo}</p>
+                            <p class="text-xs text-slate-400 mt-0.5">${p.fechaStr}</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="text-sm font-bold text-slate-900">${p.precio.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span>
+                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-300"></i>
+                        </div>
+                    </a>`);
+            });
+            lucide.createIcons();
+        }
+
+        // ── GRÁFICOS ──────────────────────────────────────────────────────────────
+        let graficoAnios = null;
+        let graficoMeses = null;
+        let anioSeleccionado = null;
+        let mesSeleccionado  = null;
+        let datosPorMes      = {};
+        let datosPorAnio     = {};
+
+        function resetFiltroAnio() {
+            anioSeleccionado = null;
+            mesSeleccionado  = null;
+            document.getElementById('btn-reset-anio').style.display = 'none';
+            document.getElementById('btn-reset-mes').style.display  = 'none';
+            // Resetear colores gráfico años
+            if (graficoAnios) {
+                graficoAnios.data.datasets[0].backgroundColor = graficoAnios.data.labels.map(() => '#f59e0b');
+                graficoAnios.update();
+            }
+            actualizarGraficoMeses();
+            actualizarContexto();
+            actualizarTablaYMetricas();
+        }
+
+        function resetFiltroMes() {
+            mesSeleccionado = null;
+            document.getElementById('btn-reset-mes').style.display = 'none';
+            // Resetear colores gráfico meses
+            if (graficoMeses) {
+                graficoMeses.data.datasets[0].backgroundColor = graficoMeses.data.labels.map(() => '#f59e0b');
+                graficoMeses.update();
+            }
+            actualizarContexto();
+            actualizarTablaYMetricas();
+        }
+
+        function etiquetaContexto() {
+            if (anioSeleccionado && mesSeleccionado) return `${nombresMeses[mesSeleccionado-1].charAt(0).toUpperCase()+nombresMeses[mesSeleccionado-1].slice(1)} ${anioSeleccionado}`;
+            if (anioSeleccionado) return `${anioSeleccionado}`;
+            if (mesSeleccionado) return `${nombresMeses[mesSeleccionado-1].charAt(0).toUpperCase()+nombresMeses[mesSeleccionado-1].slice(1)} (histórico)`;
+            return 'Histórico completo';
+        }
+
+        function actualizarContexto() {
+            const etiqueta = etiquetaContexto();
+            document.getElementById('contexto-label').textContent        = etiqueta;
+            document.getElementById('metrica-contexto-rec').textContent  = etiqueta;
+            document.getElementById('metrica-contexto-caro').textContent = etiqueta;
+            document.getElementById('tabla-contexto').textContent        = etiqueta;
+        }
+
+        function productosFiltrados() {
+            return todosLosProductos.filter(p => {
+                const d = new Date(p.fechaRaw);
+                const a = d.getFullYear();
+                const m = d.getMonth() + 1;
+                if (anioSeleccionado && mesSeleccionado) return a === anioSeleccionado && m === mesSeleccionado;
+                if (anioSeleccionado) return a === anioSeleccionado;
+                if (mesSeleccionado) return m === mesSeleccionado;
+                return true;
+            });
+        }
+
+        function actualizarTablaYMetricas() {
+            const productos = productosFiltrados();
+            renderizarTabla(productos);
+            actualizarMetricas(productos);
+            actualizarGraficoCategorias();
+        }
+
+        function actualizarMetricas(productos) {
+            if (!productos.length) {
+                document.getElementById('top-recurrente').textContent       = 'Sin datos';
+                document.getElementById('top-recurrente-veces').textContent = '';
+                document.getElementById('top-caro').textContent             = 'Sin datos';
+                document.getElementById('top-caro-precio').textContent      = '';
+                return;
+            }
+            const masCaro = [...productos].sort((a,b) => b.precio - a.precio)[0];
+            const pedidosPorTitulo = {};
+            productos.forEach(p => {
+                if (!pedidosPorTitulo[p.titulo]) pedidosPorTitulo[p.titulo] = new Set();
+                pedidosPorTitulo[p.titulo].add(p.orderKey);
+            });
+            const conteo = {};
+            Object.keys(pedidosPorTitulo).forEach(t => { conteo[t] = pedidosPorTitulo[t].size; });
+            const tituloRec = Object.keys(conteo).reduce((a,b) => conteo[a]>conteo[b]?a:b);
+            const prodRec   = productos.find(p => p.titulo === tituloRec);
+            const urlRec    = prodRec?.asin ? `https://www.amazon.es/dp/${prodRec.asin}?tag=pnlrt-21` : `https://www.amazon.es/s?k=${encodeURIComponent(tituloRec)}&tag=pnlrt-21`;
+            const urlCaro   = masCaro.asin  ? `https://www.amazon.es/dp/${masCaro.asin}?tag=pnlrt-21` : `https://www.amazon.es/s?k=${encodeURIComponent(masCaro.titulo)}&tag=pnlrt-21`;
+
+            if (conteo[tituloRec] <= 1) {
+                document.getElementById('top-recurrente').textContent       = 'Cada producto comprado una sola vez';
+                document.getElementById('top-recurrente-veces').textContent = 'No hay productos repetidos en este período';
+                document.getElementById('img-recurrente').classList.add('hidden');
+            } else {
+                document.getElementById('top-recurrente').innerHTML = `<a href="${urlRec}" target="_blank" rel="noopener noreferrer" class="text-amber-600 hover:text-amber-700 hover:underline inline-flex items-center gap-1">${tituloRec}<i data-lucide="external-link" class="w-3.5 h-3.5 inline shrink-0"></i></a>`;
+                document.getElementById('top-recurrente-veces').textContent = `Comprado en ${conteo[tituloRec]} pedidos distintos`;
+                const imgRec = document.getElementById('img-recurrente');
+                if (prodRec?.asin) {
+                    imgRec.src = `https://images-na.ssl-images-amazon.com/images/P/${prodRec.asin.trim()}.jpg`;
+                    imgRec.classList.remove('hidden');
+                    imgRec.onerror = () => imgRec.classList.add('hidden');
+                } else { imgRec.classList.add('hidden'); }
+            }
+
+            document.getElementById('top-caro').innerHTML = `<a href="${urlCaro}" target="_blank" rel="noopener noreferrer" class="text-amber-600 hover:text-amber-700 hover:underline inline-flex items-center gap-1">${masCaro.titulo}<i data-lucide="external-link" class="w-3.5 h-3.5 inline shrink-0"></i></a>`;
+            document.getElementById('top-caro-precio').textContent = masCaro.precio.toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+
+            // Imagen compra más cara
+            const imgCaro = document.getElementById('img-caro');
+            if (masCaro?.asin) {
+                imgCaro.src = `https://images-na.ssl-images-amazon.com/images/P/${masCaro.asin.trim()}.jpg`;
+                imgCaro.classList.remove('hidden');
+                imgCaro.onerror = () => imgCaro.classList.add('hidden');
+            } else { imgCaro.classList.add('hidden'); }
+            lucide.createIcons();
+        }
+
+        // Prime Day histórico por año → mes (1=ene...12=dic)
+        const PRIME_DAY = { 2015:7, 2016:7, 2017:7, 2018:7, 2019:7, 2020:10, 2021:6, 2022:7, 2023:7, 2024:7, 2025:7 };
+
+        function mesPrimeDay() {
+            // Si hay año seleccionado devuelve el mes de Prime Day ese año, si no devuelve julio (7) por defecto
+            if (anioSeleccionado && PRIME_DAY[anioSeleccionado]) return PRIME_DAY[anioSeleccionado];
+            return 7; // julio por defecto en histórico
+        }
+
+        function colorMes(idx, mesSelec) {
+            const mes = idx + 1; // 1-12
+            const esPrimeDay = mes === mesPrimeDay();
+            if (mesSelec) {
+                // Hay mes seleccionado
+                if (mes === mesSelec) return esPrimeDay ? '#0077a8' : '#d97706'; // seleccionado
+                return esPrimeDay ? '#7dd3f0' : '#fde68a'; // no seleccionado aclarado
+            }
+            // Sin selección
+            return esPrimeDay ? '#00A8E1' : '#f59e0b';
+        }
+
+        function actualizarGraficoMeses() {
+            const mesesLabels = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+            const valores = Array(12).fill(0);
+            todosLosProductos.forEach(p => {
+                const d = new Date(p.fechaRaw);
+                if (anioSeleccionado && d.getFullYear() !== anioSeleccionado) return;
+                valores[d.getMonth()] += p.precio;
+            });
+
+            if (graficoMeses) graficoMeses.destroy();
+            const ctx = document.getElementById('chart-meses').getContext('2d');
+            graficoMeses = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: mesesLabels,
+                    datasets: [{ label: 'Gasto (€)', data: valores, backgroundColor: mesesLabels.map((_,i) => colorMes(i, mesSeleccionado)), borderRadius: 6, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: (ctx) => {
+                                    if (ctx.dataIndex + 1 === mesPrimeDay()) return '⚡ Mes de Prime Day';
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
+                    onClick: (e, elements) => {
+                        if (!elements.length) return;
+                        const numMes = elements[0].index + 1;
+                        if (mesSeleccionado === numMes) {
+                            mesSeleccionado = null;
+                            document.getElementById('btn-reset-mes').style.display = 'none';
+                        } else {
+                            mesSeleccionado = numMes;
+                            document.getElementById('btn-reset-mes').style.display = 'flex';
+                        }
+                        graficoMeses.data.datasets[0].backgroundColor = mesesLabels.map((_,i) => colorMes(i, mesSeleccionado));
+                        graficoMeses.update();
+                        actualizarContexto();
+                        actualizarTablaYMetricas();
+                    }
+                }
+            });
+
+            // Leyenda Prime Day
+            const pd = mesPrimeDay();
+            const pdLabel = mesesLabels[pd - 1];
+            let leyenda = document.getElementById('prime-day-legend');
+            if (!leyenda) {
+                leyenda = document.createElement('div');
+                leyenda.id = 'prime-day-legend';
+                leyenda.className = 'flex items-center gap-1.5 text-xs text-slate-500 mt-2 justify-end';
+                document.getElementById('chart-meses').parentElement.after(leyenda);
+            }
+            leyenda.innerHTML = `<span class="w-3 h-3 rounded-sm inline-block shrink-0" style="background:#00A8E1"></span> <span>${pdLabel}: <strong>Prime Day</strong></span>`;
+        }
+
+        function renderizarGraficos(gPorMes, gPorAnio) {
+            datosPorMes  = gPorMes;
+            datosPorAnio = gPorAnio;
+
+            // Gráfico de años
+            const aniosOrdenados = Object.keys(gPorAnio).sort();
+            const valoresAnio    = aniosOrdenados.map(a => gPorAnio[a]);
+
+            if (graficoAnios) graficoAnios.destroy();
+            const ctx = document.getElementById('chart-anios').getContext('2d');
+            graficoAnios = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: aniosOrdenados,
+                    datasets: [{ label: 'Gasto (€)', data: valoresAnio, backgroundColor: aniosOrdenados.map(() => '#f59e0b'), borderRadius: 8, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
+                    onClick: (e, elements) => {
+                        if (!elements.length) return;
+                        const anio = parseInt(aniosOrdenados[elements[0].index]);
+
+                        if (anioSeleccionado === anio) {
+                            resetFiltroAnio();
+                            graficoAnios.data.datasets[0].backgroundColor = aniosOrdenados.map(() => '#f59e0b');
+                            graficoAnios.update();
+                            return;
+                        }
+
+                        anioSeleccionado = anio;
+                        mesSeleccionado  = null;
+                        document.getElementById('btn-reset-anio').style.display = 'flex';
+                        document.getElementById('btn-reset-mes').style.display  = 'none';
+                        graficoAnios.data.datasets[0].backgroundColor = aniosOrdenados.map(a => parseInt(a) === anio ? '#d97706' : '#fde68a');
+                        graficoAnios.update();
+                        actualizarGraficoMeses();
+                        actualizarContexto();
+                        actualizarTablaYMetricas();
+                    }
+                }
+            });
+
+            // Gráfico de meses (histórico inicial)
+            actualizarGraficoMeses();
+        }
+
+        // ── HASH EMAIL ────────────────────────────────────────────────────────────
+        async function hashEmail(email) {
+            const normalizado = email.trim().toLowerCase();
+            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalizado));
+            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2,'0')).join('').substring(0, 16);
+        }
+
+        // ── RANKING ───────────────────────────────────────────────────────────────
+        async function participarEnRanking() {
+            if (totalHistorico === 0) return;
+            if (API_URL.includes('PEGA_AQUI')) {
+                document.getElementById('ranking-resultado').textContent = '⚠️ El ranking aún no está configurado.';
+                document.getElementById('ranking-resultado').classList.remove('hidden');
+                return;
+            }
+
+            const emailInput = document.getElementById('ranking-email').value.trim();
+            if (!emailInput || !emailInput.includes('@')) {
+                document.getElementById('ranking-resultado').textContent = '⚠️ Introduce un email válido para participar.';
+                document.getElementById('ranking-resultado').classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('btn-ranking');
+            const resultado = document.getElementById('ranking-resultado');
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const miID = await hashEmail(emailInput);
+
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        id: miID,
+                        total: totalHistorico,
+                        media: mediaMensual,
+                        email: emailInput,
+                        datos: {
+                            perfil:       perfilActual?.nombre || '',
+                            estrellas:    document.getElementById('perfil-estrellas')?.textContent || '',
+                            categoriaTop: (() => { const t={}; CATEGORIAS_META.forEach(c=>{t[c.id]=0}); todosLosProductos.forEach(p=>{t[p.categoria||'Otros']=(t[p.categoria||'Otros']||0)+p.precio}); return CATEGORIAS_META.filter(c=>t[c.id]>0).sort((a,b)=>t[b.id]-t[a.id])[0]?.id||''; })(),
+                            antiguedad:   document.getElementById('stat-antiguedad')?.textContent || '',
+                            pedidos:      new Set(todosLosProductos.map(p=>p.orderKey)).size
+                        }
+                    })
+                });
+
+                const res     = await fetch(`${API_URL}?action=get`);
+                const ranking = await res.json();
+                if (!Array.isArray(ranking)) throw new Error('Respuesta inesperada');
+
+                const pos = ranking.findIndex(r => r.id === miID) + 1;
+                resultado.textContent = `🏆 Estás en la posición ${pos} de ${ranking.length} AMZingers.`;
+                resultado.classList.remove('hidden');
+                btn.textContent = '✓ Registrado';
+
+            } catch {
+                resultado.textContent = '⚠️ Error al conectar con el ranking. Inténtalo más tarde.';
+                resultado.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = 'Ver mi posición en el Ranking Global';
+            }
+        }
+    </script>
+</body>
+</html>
