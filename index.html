@@ -64,16 +64,16 @@
                         <span>Accede a tu cuenta de Amazon desde el móvil o PC y solicita tus datos de pedidos siguiendo esta ruta:<br>
                             <span class="inline-block mt-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-mono">Cuenta → Gestionar tus datos → Solicitar tus datos → Mis pedidos → Enviar solicitud</span><br>
                             <span class="text-xs text-slate-500 mt-2 inline-block">o solicítalo directamente aquí:</span><br>
-                            <a href="https://www.amazon.es/hz/privacy-central/data-requests/preview.html" target="_blank" rel="noopener noreferrer"
-                                class="inline-flex items-center gap-1.5 mt-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                            <button onclick="abrirSolicitudAmazon()"
+                                class="inline-flex items-center gap-1.5 mt-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
                                 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                                 Ir a solicitud de datos de Amazon
-                            </a>
+                            </button>
                         </span>
                     </li>
                     <li class="flex gap-3">
                         <span class="bg-amber-100 text-amber-700 font-black text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">2</span>
-                        <span>Sigue las instrucciones que recibirás en tu email para descargar tu historial. Tranquilo, aunque Amazon diga que puede tardar hasta un mes en recopilar tus datos, <strong>suele tardar unos minutos.</strong></span>
+                        <span>Sigue las instrucciones que recibirás en tu email para descargar tu historial. Tranquilo, aunque Amazon diga que puede tardar hasta un mes en recopilar tus datos, <strong>suele tardar unos 15-20 minutos en llegarte el enlace de descarga a tu mail.</strong></span>
                     </li>
                     <li class="flex gap-3">
                         <span class="bg-amber-100 text-amber-700 font-black text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
@@ -475,15 +475,6 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbwTUZsOhASyxfY5qkXRkzcKAEbSZ9AZpb_omwY8bR9cNZfjohZLuAX7D2RjHsQCjWk/exec';
         const URL_APP = 'https://amzingstats.com';
 
-        function actualizarEnlaceAmazon() {
-            const pais = document.getElementById('amazon-pais').value;
-            const btn  = document.getElementById('btn-amazon-link');
-            if (!pais) return;
-            btn.href = `https://www.amazon.${pais}/hz/privacy-central/data-requests/preview.html`;
-            btn.classList.remove('bg-slate-300','text-slate-500','cursor-not-allowed','pointer-events-none');
-            btn.classList.add('bg-amber-500','hover:bg-amber-600','text-white','cursor-pointer');
-        }
-
         // ── ESTADO GLOBAL ─────────────────────────────────────────────────────────
         let todosLosProductos = [];
         let totalHistorico    = 0;
@@ -537,13 +528,33 @@
         }
 
         // ── COMPARTIR ─────────────────────────────────────────────────────────────
-        function actualizarEnlaceAmazon() {
-            const pais = document.getElementById('amazon-pais').value;
-            const btn  = document.getElementById('btn-amazon-link');
-            if (!pais) return;
-            btn.href = `https://www.amazon.${pais}/hz/privacy-central/data-requests/preview.html`;
-            btn.classList.remove('bg-slate-300','text-slate-500','cursor-not-allowed','pointer-events-none');
-            btn.classList.add('bg-amber-500','hover:bg-amber-600','text-white','cursor-pointer');
+        function abrirSolicitudAmazon() {
+            const urlWeb = 'https://www.amazon.es/hz/privacy-central/data-requests/preview.html';
+            const ua = navigator.userAgent || '';
+            const esAndroid = /Android/i.test(ua);
+            const esIOS     = /iPhone|iPad|iPod/i.test(ua);
+
+            if (esAndroid) {
+                // Intent de Android: intenta abrir la app de Amazon, si no existe cae al navegador
+                const intentUrl = `intent://www.amazon.es/hz/privacy-central/data-requests/preview.html#Intent;scheme=https;package=com.amazon.mShop.android.shopping;S.browser_fallback_url=${encodeURIComponent(urlWeb)};end`;
+                window.location.href = intentUrl;
+                return;
+            }
+
+            if (esIOS) {
+                // Esquema de Amazon en iOS; si no está instalada, fallback tras un breve timeout
+                const appUrl = `com.amazon.mobile.shopping.web://www.amazon.es/hz/privacy-central/data-requests/preview.html`;
+                let cayoAFallback = false;
+                const timer = setTimeout(() => {
+                    if (!cayoAFallback) { cayoAFallback = true; window.open(urlWeb, '_blank'); }
+                }, 800);
+                window.addEventListener('blur', () => { clearTimeout(timer); cayoAFallback = true; }, { once: true });
+                window.location.href = appUrl;
+                return;
+            }
+
+            // Desktop / fallback general
+            window.open(urlWeb, '_blank', 'noopener,noreferrer');
         }
 
         function enviarFeedback() {
